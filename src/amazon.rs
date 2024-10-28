@@ -17,37 +17,50 @@ pub struct Product {
 #[derive(Debug)]
 pub struct Products(Vec<Product>);
 
-// TODO: Use offset to account for ignored sponsored products
 const RESULTS_PER_PAGE: usize = 56;
 
 pub async fn query_products(url: &str, pages: usize) -> Result<Products> {
-    let mut products: Vec<Product> = Vec::with_capacity(RESULTS_PER_PAGE * pages);
+    let mut handles = Vec::with_capacity(pages);
 
     for i in 0..pages {
-        println!("querying page {}", i + 1);
-        let url = paginate_url(url, i);
-        let doc = fetch_dom(&url).await?;
-        parse_products(doc, &mut products);
+        let url = url.to_owned();
+        let handle = tokio::spawn(async move {
+            println!("querying page {}", i + 1);
+            let url = paginate_url(&url, i);
+            let doc = fetch_dom(&url).await.expect("valid dom");
+            parse_products(doc)
+        });
+
+        handles.push(handle);
     }
 
-    Ok(Products(products))
+    let results = futures::future::join_all(handles)
+        .await
+        .into_iter()
+        .flat_map(|res| res.unwrap())
+        .collect::<Vec<_>>();
+
+    Ok(Products(results))
 }
 
-fn parse_products(doc: Html, buffer: &mut Vec<Product>) {
+fn parse_products(doc: Html) -> Vec<Product> {
     let container_selector =
         Selector::parse(".s-main-slot.s-result-list.s-search-results").unwrap();
     let container = doc.select(&container_selector).next().unwrap();
 
+    let mut buffer = Vec::with_capacity(RESULTS_PER_PAGE);
     for element in container.child_elements() {
         match element.attr("data-component-type") {
             Some("s-search-result") => {
-                if parse_product(element, buffer).is_err() {
+                if parse_product(element, &mut buffer).is_err() {
                     continue;
                 }
             }
             _ => continue,
         }
     }
+
+    buffer
 }
 
 lazy_static! {

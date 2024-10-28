@@ -20,7 +20,8 @@ async fn main() -> Result<()> {
     let mut workbook = Workbook::new();
     workbook.push_worksheet(products.as_worksheet()?);
     workbook.save("products.xlsx")?;
-    dbg!(products);
+
+    println!("Done!");
 
     Ok(())
 }
