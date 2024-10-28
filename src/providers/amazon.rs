@@ -1,21 +1,4 @@
-use anyhow::{Context, Result};
-use bol_scraper_empire::fetch_dom;
-use get_fields::GetFields;
-use lazy_static::lazy_static;
-use regex::Regex;
-use rust_xlsxwriter::Worksheet;
-use scraper::{selectable::Selectable, ElementRef, Html, Selector};
-
-#[derive(Debug, GetFields)]
-pub struct Product {
-    pub title: String,
-    pub image: String,
-    pub url: String,
-    pub price: f64,
-}
-
-#[derive(Debug)]
-pub struct Products(Vec<Product>);
+use super::*;
 
 const RESULTS_PER_PAGE: usize = 56;
 
@@ -140,35 +123,4 @@ fn parse_product(el: ElementRef<'_>, buffer: &mut Vec<Product>) -> Result<()> {
 
 lazy_static! {
     static ref sponsored_regex: Regex = Regex::new(r"Gesponsord").unwrap();
-    static ref page_param_regex: Regex = Regex::new(r"page=\d*").unwrap();
-}
-
-fn paginate_url(url: &str, page: usize) -> String {
-    if !page_param_regex.is_match(url) {
-        format!("{}&page={}", url, page)
-    } else {
-        page_param_regex
-            .replace(url, format!("page={}", page).as_str())
-            .to_string()
-    }
-}
-
-impl Products {
-    pub fn as_worksheet(&self) -> Result<Worksheet> {
-        let mut worksheet = Worksheet::new();
-
-        for (col, name) in ["title", "image", "url", "price"].iter().enumerate() {
-            worksheet.write(0, col as u16, *name)?;
-        }
-
-        for (i, product) in self.0.iter().enumerate() {
-            let row = (i + 1) as u32;
-            worksheet.write(row, 0, &product.title)?;
-            worksheet.write(row, 1, &product.image)?;
-            worksheet.write(row, 2, &product.url)?;
-            worksheet.write(row, 3, product.price)?;
-        }
-
-        Ok(worksheet)
-    }
 }
