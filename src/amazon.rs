@@ -157,7 +157,7 @@ impl Products {
     pub fn as_worksheet(&self) -> Result<Worksheet> {
         let mut worksheet = Worksheet::new();
 
-        for (col, name) in Product::get_fields.iter().enumerate() {
+        for (col, name) in ["title", "image", "url", "price"].iter().enumerate() {
             worksheet.write(0, col as u16, *name)?;
         }
 
