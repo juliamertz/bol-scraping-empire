@@ -44,8 +44,6 @@ pub async fn query_products(url: &str, pages: usize) -> Result<Products> {
 }
 
 fn parse_products(doc: Html) -> Vec<Product> {
-    let container_selector =
-        Selector::parse(".s-main-slot.s-result-list.s-search-results").unwrap();
     let container = doc.select(&container_selector).next().unwrap();
 
     let mut buffer = Vec::with_capacity(RESULTS_PER_PAGE);
@@ -64,6 +62,8 @@ fn parse_products(doc: Html) -> Vec<Product> {
 }
 
 lazy_static! {
+    static ref container_selector: Selector =
+        Selector::parse(".s-main-slot.s-result-list.s-search-results").unwrap();
     static ref image_selector: Selector = Selector::parse(".s-image").unwrap();
     static ref title_wrapper_selector: Selector =
         Selector::parse(".s-title-instructions-style a").unwrap();
