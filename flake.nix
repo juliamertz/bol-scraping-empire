@@ -33,7 +33,7 @@
             ++ lib.optionals stdenv.isDarwin [ makeBinaryWrapper ];
           buildInputs =
             with pkgs;
-            [ openssl ] ++ lib.optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [ IOKit ]);
+            [ openssl ] ++ lib.optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [ IOKit SystemConfiguration ]);
         in
         {
           packages.default =
