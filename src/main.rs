@@ -13,7 +13,10 @@ fn read_line(msg: &str) -> std::io::Result<String> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut args = std::env::args();
+    let args = std::env::args();
+    render_gui().unwrap();
+    std::process::exit(0);
+
     let subcommand = args.next().expect("a subcommand");
 
     let url = read_line("Link naar amazon zoekresultaten")?;
@@ -32,4 +35,52 @@ async fn main() -> Result<()> {
     println!("Done!");
 
     Ok(())
+}
+
+use eframe::egui;
+
+fn render_gui() -> eframe::Result {
+    let options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default().with_inner_size([320.0, 240.0]),
+        ..Default::default()
+    };
+    eframe::run_native(
+        "My egui App",
+        options,
+        Box::new(|_| {
+            Ok(Box::<MyApp>::default())
+        }),
+    )
+}
+
+struct MyApp {
+    name: String,
+    age: u32,
+}
+
+impl Default for MyApp {
+    fn default() -> Self {
+        Self {
+            name: "Arthur".to_owned(),
+            age: 42,
+        }
+    }
+}
+
+impl eframe::App for MyApp {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            ui.heading("My egui Application");
+            ui.horizontal(|ui| {
+                let name_label = ui.label("Your name: ");
+                ui.text_edit_singleline(&mut self.name)
+                    .labelled_by(name_label.id);
+            });
+            ui.add(egui::Slider::new(&mut self.age, 0..=120).text("age"));
+            if ui.button("Increment").clicked() {
+                self.age += 1;
+            }
+            ui.label(format!("Hello '{}', age {}", self.name, self.age));
+        });
+    }
 }
