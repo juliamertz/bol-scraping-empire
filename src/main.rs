@@ -20,10 +20,10 @@ fn read_line(msg: &str) -> std::io::Result<String> {
     stdin.lines().next().expect("input")
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+// #[tokio::main]
+ fn main() -> Result<()> {
     let args = std::env::args();
-    // create_window().unwrap();
+    gui::main()?;
     std::process::exit(0);
 
     let subcommand = args.next().expect("a subcommand");

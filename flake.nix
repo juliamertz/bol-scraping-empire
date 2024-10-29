@@ -29,6 +29,18 @@
             [
               pkg-config
               rustPlatform.bindgenHook
+              xorg.libX11
+              xorg.libXcursor
+              xorg.libXi
+              libxkbcommon
+              xorg.libxcb
+              alsa-lib
+              libudev-zero
+              openssl
+              llvm
+              pkg-config
+              gcc
+              sqlite
             ]
             ++ lib.optionals stdenv.isDarwin [ makeBinaryWrapper ];
           buildInputs =
@@ -67,6 +79,19 @@
           devShells.default = pkgs.mkShell {
             name = "dev-shell";
             inherit nativeBuildInputs;
+
+            LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:${
+              with pkgs;
+              pkgs.lib.makeLibraryPath [
+                xorg.libX11
+                xorg.libXcursor
+                xorg.libXi
+                libxkbcommon
+                xorg.libxcb
+                pkgs.vulkan-loader
+                pkgs.glfw
+              ]
+            }";
 
             buildInputs =
               let

@@ -4,6 +4,7 @@ use iced::Subscription;
 
 use std::hash::Hash;
 use std::sync::Arc;
+use std::time::Duration;
 
 // Just a little utility function
 pub fn file<I: 'static + Hash + Copy + Send + Sync, T: ToString>(
@@ -18,24 +19,9 @@ pub fn file<I: 'static + Hash + Copy + Send + Sync, T: ToString>(
 
 fn download(url: String) -> impl Stream<Item = Result<Progress, Error>> {
     try_channel(1, move |mut output| async move {
-        let response = reqwest::get(&url).await?;
-        let total = response.content_length().ok_or(Error::NoContentLength)?;
-
         let _ = output.send(Progress::Downloading { percent: 0.0 }).await;
 
-        let mut byte_stream = response.();
-        let mut downloaded = 0;
-
-        while let Some(next_bytes) = byte_stream.next().await {
-            let bytes = next_bytes?;
-            downloaded += bytes.len();
-
-            let _ = output
-                .send(Progress::Downloading {
-                    percent: 100.0 * downloaded as f32 / total as f32,
-                })
-                .await;
-        }
+        std::thread::sleep(Duration::from_secs(2));
 
         let _ = output.send(Progress::Finished).await;
 

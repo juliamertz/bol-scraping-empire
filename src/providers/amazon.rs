@@ -28,7 +28,7 @@ pub async fn query_products(url: &str, pages: usize) -> QueryHandles<Product> {
     // Ok(Products(results))
 }
 
-fn parse_products(doc: Html) -> Vec<Product> {
+pub fn parse_products(doc: Html) -> Vec<Product> {
     let container = doc.select(&container_selector).next().unwrap();
 
     let mut buffer = Vec::with_capacity(RESULTS_PER_PAGE);
