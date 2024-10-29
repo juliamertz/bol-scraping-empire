@@ -6,6 +6,7 @@ pub use bol_scraper_empire::fetch_dom;
 pub use lazy_static::lazy_static;
 pub use regex::Regex;
 pub use scraper::{selectable::Selectable, ElementRef, Html, Selector};
+use tokio::task::JoinHandle;
 
 use std::ops::{Deref, DerefMut};
 
@@ -19,6 +20,8 @@ pub struct Product {
 
 #[derive(Debug)]
 pub struct Products(Vec<Product>);
+
+pub type QueryHandles<T> = Vec<JoinHandle<Vec<T>>>;
 
 lazy_static! {
     static ref page_param_regex: Regex = Regex::new(r"page=\d*").unwrap();

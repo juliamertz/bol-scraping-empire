@@ -2,7 +2,7 @@ use super::*;
 
 const RESULTS_PER_PAGE: usize = 24;
 
-pub async fn query_products(url: &str, pages: usize) -> Result<Products> {
+pub async fn query_products(url: &str, pages: usize) -> QueryHandles<Product> {
     let mut handles = Vec::with_capacity(pages);
 
     for i in 0..pages {
@@ -17,13 +17,14 @@ pub async fn query_products(url: &str, pages: usize) -> Result<Products> {
         handles.push(handle);
     }
 
-    let results = futures::future::join_all(handles)
-        .await
-        .into_iter()
-        .flat_map(|res| res.unwrap())
-        .collect::<Vec<_>>();
-
-    Ok(Products(results))
+    handles
+    // let results = futures::future::join_all(handles)
+    //     .await
+    //     .into_iter()
+    //     .flat_map(|res| res.unwrap())
+    //     .collect::<Vec<_>>();
+    //
+    // Ok(Products(results))
 }
 
 fn parse_products(doc: Html) -> Vec<Product> {
