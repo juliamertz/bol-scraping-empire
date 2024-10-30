@@ -3,7 +3,11 @@ mod providers;
 use anyhow::Result;
 use providers::{amazon, bol};
 use rust_xlsxwriter::Workbook;
-use std::io::{self, BufRead};
+use std::{
+    io::{self, BufRead},
+    path::PathBuf,
+    str::FromStr,
+};
 
 use clap::{Parser, Subcommand};
 
@@ -14,10 +18,10 @@ struct Cli {
     ask_location: bool,
 
     #[command(subcommand)]
-    command: Option<Commands>,
+    command: Commands,
 }
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug)]
 enum Commands {
     Amazon,
     Bol,
@@ -29,24 +33,33 @@ fn read_line(msg: &str) -> std::io::Result<String> {
     stdin.lines().next().expect("input")
 }
 
+static OUTFILE: &str = "products.xlsx";
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    // let url = read_line("Link naar amazon zoekresultaten")?;
-    // let pages = read_line("Hoeveel paginas")?.parse().expect("Valid usize");
+    let url = read_line(&format!("Link naar {:?} zoekresultaten", cli.command))?;
+    let pages = read_line("Hoeveel paginas")?.parse().unwrap_or(1);
 
-    // let products = match subcommand.to_lowercase().as_str() {
-    //     "bol" => bol::query_products(&url, pages).await?,
-    //     "amazon" => amazon::query_products(&url, pages).await?,
-    //
-    //     _ => anyhow::bail!("choose from: [bol, amazon]"),
-    // };
-    //
-    // let mut workbook = Workbook::new();
-    // workbook.push_worksheet(products.as_worksheet()?);
-    // workbook.save("products.xlsx")?;
-    // println!("Done!");
+    let products = match cli.command {
+        Commands::Bol => bol::query_products(&url, pages).await?,
+        Commands::Amazon => amazon::query_products(&url, pages).await?,
+    };
+
+    let mut workbook = Workbook::new();
+    workbook.push_worksheet(products.as_worksheet()?);
+
+    let mut outfile = PathBuf::from_str(OUTFILE).unwrap();
+    if cli.ask_location {
+        outfile = rfd::FileDialog::new()
+            .set_file_name(OUTFILE)
+            .save_file()
+            .unwrap_or(outfile)
+    }
+
+    workbook.save(outfile)?;
+    println!("Done!");
 
     Ok(())
 }

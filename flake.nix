@@ -33,7 +33,15 @@
             ++ lib.optionals stdenv.isDarwin [ makeBinaryWrapper ];
           buildInputs =
             with pkgs;
-            [ openssl ] ++ lib.optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [ IOKit SystemConfiguration ]);
+            [ openssl ]
+            ++ lib.optionals stdenv.isDarwin (
+              with darwin.apple_sdk.frameworks;
+              [
+                IOKit
+                SystemConfiguration
+                AppKit
+              ]
+            );
         in
         {
           packages.default =
@@ -42,10 +50,7 @@
             in
             pkgs.rustPlatform.buildRustPackage {
               inherit buildInputs nativeBuildInputs;
-              inherit (manifest)
-                name
-                version
-                ;
+              inherit (manifest) name version;
 
               src = ./.;
               cargoLock = {
@@ -58,19 +63,24 @@
             name = "dev-shell";
             inherit nativeBuildInputs;
 
-          buildInputs = let
-            overlays = [ (import inputs.rust-overlay) ];
-            pkgs = import (inputs.nixpkgs) { inherit system overlays; }; 
-          in
-          buildInputs ++ (with pkgs.rust-bin; [
-            (stable.latest.minimal.override {
-              extensions = [ "clippy" "rust-src" ];
-            })
+            buildInputs =
+              let
+                overlays = [ (import inputs.rust-overlay) ];
+                pkgs = import (inputs.nixpkgs) { inherit system overlays; };
+              in
+              buildInputs
+              ++ (with pkgs.rust-bin; [
+                (stable.latest.minimal.override {
+                  extensions = [
+                    "clippy"
+                    "rust-src"
+                  ];
+                })
 
-            nightly.latest.clippy
-            nightly.latest.rustfmt
-            nightly.latest.rust-analyzer
-          ]);
+                nightly.latest.clippy
+                nightly.latest.rustfmt
+                nightly.latest.rust-analyzer
+              ]);
           };
 
         };
