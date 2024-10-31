@@ -65,7 +65,7 @@ lazy_static! {
 
 pub fn paginate_url(url: &str, page: usize) -> String {
     if !url.contains("?") {
-        return format!("{}?page={}", url, page)
+        return format!("{}?page={}", url, page);
     }
 
     if !page_param_regex.is_match(url) {

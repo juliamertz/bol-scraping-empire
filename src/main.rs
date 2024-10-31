@@ -1,4 +1,6 @@
 mod providers;
+#[cfg(feature = "updater")]
+mod versioning;
 
 use anyhow::Result;
 use rust_xlsxwriter::Workbook;
@@ -28,6 +30,9 @@ static OUTFILE: &str = "products.xlsx";
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
+
+    #[cfg(feature = "updater")]
+    versioning::try_update().await?;
 
     let url = read_line("Link naar zoekresultaten")?;
     let pages = read_line("Hoeveel paginas")?.parse().unwrap_or(1);
