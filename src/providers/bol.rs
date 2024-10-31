@@ -82,7 +82,7 @@ fn parse_product(el: ElementRef<'_>, buffer: &mut Vec<Product>) -> Result<()> {
         None => el
             .select(&price_selector)
             .next()
-            .expect("a price")
+            .context("Expected product to have a price")?
             .attr("content")
             .expect("price content")
             .parse()
@@ -97,7 +97,7 @@ fn parse_product(el: ElementRef<'_>, buffer: &mut Vec<Product>) -> Result<()> {
         title,
         price,
         image: image.to_string(),
-        url: url.to_string(),
+        url: format!("https://bol.com{}", url),
     };
 
     buffer.push(product);
