@@ -71,6 +71,12 @@ fn parse_product(el: ElementRef<'_>, buffer: &mut Vec<Product>) -> Result<()> {
         .attr("href")
         .expect("product to have url");
 
+    for item in buffer.iter() {
+        if item.url == url {
+            anyhow::bail!("Product with same url alredy parsed")
+        }
+    }
+
     let price = match el.select(&price_old_selector).next() {
         Some(price) => price.inner_html(),
         None => el
