@@ -27,7 +27,7 @@ pub async fn query_products(url: &str, pages: usize) -> Result<Products> {
 }
 
 fn parse_products(doc: Html) -> Vec<Product> {
-    let container = doc.select(&container_selector).next().unwrap();
+    let container = doc.select(&container_selector).next().expect("Pagina komt niet overeen met de verwachte structuur. Deze is nog niet toegevoegd, of bol.com heeft hun pagina aangepast");
 
     let mut buffer = Vec::with_capacity(RESULTS_PER_PAGE);
     for element in container.child_elements() {
