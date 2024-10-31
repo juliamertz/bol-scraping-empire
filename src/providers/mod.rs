@@ -40,7 +40,7 @@ impl Provider {
             _ => anyhow::bail!("Unsupported url: {url}"),
         };
 
-        if *tld != "com" && *tld  != "nl" {
+        if *tld != "com" && *tld != "nl" {
             anyhow::bail!("unsupported top level domain {tld}")
         }
 

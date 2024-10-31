@@ -1,7 +1,6 @@
 mod providers;
 
 use anyhow::Result;
-use providers::{amazon, bol};
 use rust_xlsxwriter::Workbook;
 use std::{
     io::{self, BufRead},
@@ -9,7 +8,7 @@ use std::{
     str::FromStr,
 };
 
-use clap::{Parser, Subcommand};
+use clap::Parser;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
