@@ -31,8 +31,8 @@ jobs:
           # - os: ubuntu-latest
           #   target: armv7-unknown-linux-gnueabihf
           #   cross_arch: true
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
+          # - os: windows-latest
+          #   target: x86_64-pc-windows-msvc
 
     steps:
       - name: Checkout source
@@ -58,15 +58,8 @@ jobs:
         shell: bash
         run: |
           cd target/${{ matrix.target }}/release
-          case ${{ matrix.target }} in
-          *-pc-windows-*)
-            7z -y a bol_empire-${{ matrix.target }}.zip bol-scraper-empire.exe
-            sha256sum bol-scraper-empire-${{ matrix.target }}.zip > bol-scraper-empire-${{ matrix.target }}.sha256
-            ;;
-          *)
-            tar czvf bol-scraper-empire-${{ matrix.target }}.tar.gz bol-scraper-empire
-            shasum -a 256 bol-scraper-empire-${{ matrix.target }}.tar.gz > bol-scraper-empire-${{ matrix.target }}.sha256
-            ;;
+          tar czvf bol-scraper-empire-${{ matrix.target }}.tar.gz bol-scraper-empire
+          shasum -a 256 bol-scraper-empire-${{ matrix.target }}.tar.gz > bol-scraper-empire-${{ matrix.target }}.sha256
           esac;
 
       - name: Release
