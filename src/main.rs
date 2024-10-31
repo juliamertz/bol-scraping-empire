@@ -16,15 +16,6 @@ use clap::{Parser, Subcommand};
 struct Cli {
     #[arg(short, long)]
     ask_location: bool,
-
-    #[command(subcommand)]
-    command: Commands,
-}
-
-#[derive(Subcommand, Debug)]
-enum Commands {
-    Amazon,
-    Bol,
 }
 
 fn read_line(msg: &str) -> std::io::Result<String> {
@@ -39,13 +30,11 @@ static OUTFILE: &str = "products.xlsx";
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    let url = read_line(&format!("Link naar {:?} zoekresultaten", cli.command))?;
+    let url = read_line("Link naar zoekresultaten")?;
     let pages = read_line("Hoeveel paginas")?.parse().unwrap_or(1);
 
-    let products = match cli.command {
-        Commands::Bol => bol::query_products(&url, pages).await?,
-        Commands::Amazon => amazon::query_products(&url, pages).await?,
-    };
+    let provider = providers::Provider::from_url(&url)?;
+    let products = provider.query_products(&url, pages).await?;
 
     let mut workbook = Workbook::new();
     workbook.push_worksheet(products.as_worksheet()?);

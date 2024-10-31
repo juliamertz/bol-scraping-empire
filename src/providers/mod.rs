@@ -9,6 +9,45 @@ pub use scraper::{selectable::Selectable, ElementRef, Html, Selector};
 
 use std::ops::{Deref, DerefMut};
 
+#[derive(clap::Subcommand, Debug)]
+pub enum Provider {
+    Amazon,
+    Bol,
+}
+
+impl Provider {
+    pub async fn query_products(&self, url: &str, pages: usize) -> Result<Products> {
+        match self {
+            Self::Amazon => amazon::query_products(url, pages).await,
+            Self::Bol => bol::query_products(url, pages).await,
+        }
+    }
+
+    pub fn from_url(url: &str) -> Result<Self> {
+        let domain = match url.split("/").nth(2) {
+            Some(domain) => domain,
+            None => anyhow::bail!("Invalid url, unable to parse domain"),
+        };
+
+        let parts = domain
+            .split(".")
+            .skip_while(|x| x == &"www")
+            .collect::<Vec<_>>();
+
+        let (provider, tld) = match parts.as_slice() {
+            ["amazon", tld] => (Self::Amazon, tld),
+            ["bol", tld] => (Self::Bol, tld),
+            _ => anyhow::bail!("Unsupported url: {url}"),
+        };
+
+        if *tld != "com" && *tld  != "nl" {
+            anyhow::bail!("unsupported top level domain {tld}")
+        }
+
+        Ok(provider)
+    }
+}
+
 #[derive(Debug)]
 pub struct Product {
     pub title: String,
