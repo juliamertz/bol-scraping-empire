@@ -31,8 +31,8 @@ fn parse_products(doc: Html) -> Vec<Product> {
 
     let mut buffer = Vec::with_capacity(RESULTS_PER_PAGE);
     for element in container.child_elements() {
-        if let Err(err) = parse_product(element, &mut buffer) {
-            eprintln!("no parsey: {err:#}")
+        if let Err(_err) = parse_product(element, &mut buffer) {
+            // eprintln!("no parsey: {err:#}")
         }
     }
 
