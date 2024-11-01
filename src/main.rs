@@ -30,11 +30,11 @@ static OUTFILE: &str = "products.xlsx";
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    println!("current version: {}", versioning::Version::current());
-    let latest = versioning::latest_version().await?;
-    println!("latest version: {}", latest);
-    let bin = versioning::fetch_latest_bin().await?;
-    std::fs::write("latest.tar.gz", bin)?;
+    // println!("current version: {}", versioning::Version::current());
+    // let latest = versioning::latest_version().await?;
+    // println!("latest version: {}", latest);
+    // let bin = versioning::fetch_latest_bin().await?;
+    // std::fs::write("latest.tar.gz", bin)?;
     std::process::exit(0);
 
     let url = read_line("Link naar zoekresultaten")?;

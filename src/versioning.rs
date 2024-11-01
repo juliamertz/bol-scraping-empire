@@ -15,7 +15,7 @@ pub struct Version {
 }
 
 impl Version {
-    pub fn parse(value: &str) -> Result<Self> {
+    fn parse(value: &str) -> Result<Self> {
         let split = value.split(".").collect::<Vec<_>>();
 
         match split.as_slice() {
@@ -27,9 +27,11 @@ impl Version {
             _ => anyhow::bail!("invalid version format"),
         }
     }
+}
 
-    pub fn current() -> Self {
-        Self::parse(env!("CARGO_PKG_VERSION")).expect("valid runtime version")
+impl Ord for Version {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+       self.major > other.major 
     }
 }
 
@@ -65,22 +67,18 @@ async fn query_releases() -> Result<Vec<Release>> {
     Ok(data)
 }
 
-pub async fn latest_release() -> Result<Release> {
+async fn latest_release() -> Result<Release> {
     let releases = query_releases().await?;
     let latest = releases.into_iter().next().expect("At least one release");
-
-    // let target = if cfg!(target_os = "linux") {
-    //     "x86_64-unknown-linux-gnu"
-    // } else if cfg!(target_os = "macos") {
-    //     "x86_64-unknown-linux-gnu.tar.gz"
-    // } else {
-    //     anyhow::bail!("unsupported OS")
-    // };
 
     Ok(latest)
 }
 
-pub async fn latest_version() -> Result<Version> {
+pub fn current() -> Version {
+    Version::parse(env!("CARGO_PKG_VERSION")).expect("valid runtime version")
+}
+
+pub async fn latest() -> Result<Version> {
     let latest = latest_release().await?;
     Version::parse(
         latest
@@ -90,7 +88,11 @@ pub async fn latest_version() -> Result<Version> {
     )
 }
 
-pub async fn fetch_latest_bin<'a>() -> Result<Bytes> {
+// pub async fn needs_update() -> Result<bool> {
+//
+// }
+
+async fn fetch_latest_bin<'a>() -> Result<Bytes> {
     let name = env!("CARGO_PKG_NAME");
     let arch = std::env::consts::ARCH;
 
