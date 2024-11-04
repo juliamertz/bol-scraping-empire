@@ -121,8 +121,7 @@ pub async fn try_update() -> Result<bool> {
     let version = Version::parse(&latest.tag_name).unwrap();
     let current = Version::parse(env!("CARGO_PKG_VERSION")).expect("valid runtime version");
 
-    // match version.cmp(&current) {
-    match Ordering::Greater {
+    match version.cmp(&current) {
         Ordering::Equal => {
             println!("Je gebruikt de nieuwste versie {current}");
             Ok(false)
@@ -143,20 +142,8 @@ pub async fn try_update() -> Result<bool> {
             std::fs::write(cwd.join(filename), latest)?;
             println!("Nieuwste versie is gedownload, herstart het programma om deze te activeren.");
 
-
-            // println!("Unpacking binaries...");
-            // let temp_dir = std::env::temp_dir();
-            // extract_tar(latest, &temp_dir)?;
-            //
-            // let bin_path = temp_dir.join();
-            // let bin_content = std::fs::read(bin_path)?;
-            // std::fs::remove_dir_all(temp_dir)?;
-            //
-            // println!("Programma probeert nu zichzelf te vervangen met de nieuwe versie, er wordt verwacht dat het programma crasht wanneer dit lukt.");
-            //
-            //
-
-            Ok(true)
+            // magic exit code handled in ./run.sh script for self-updating
+            std::process::exit(169);
         }
     }
 }
