@@ -15,7 +15,7 @@ use clap::Parser;
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct Cli {
-    #[arg(short, long, default_value = "true")]
+    #[arg(long, default_value = "true")]
     ask_location: bool,
 }
 

@@ -5,9 +5,6 @@ use serde::{Deserialize, Serialize};
 use std::{
     cmp::Ordering,
     fmt::Display,
-    path::{Path, PathBuf},
-    process::Command,
-    str::FromStr,
 };
 
 /// this program is meant to be distributed to non-techical people
@@ -96,7 +93,7 @@ async fn latest_release() -> Result<Release> {
     Ok(latest)
 }
 
-async fn fetch_latest_bin<'a>() -> Result<Bytes> {
+async fn fetch_latest_bin() -> Result<Bytes> {
     let name = env!("CARGO_PKG_NAME");
     let arch = std::env::consts::ARCH;
 
@@ -119,46 +116,13 @@ async fn fetch_latest_bin<'a>() -> Result<Bytes> {
     Ok(res.bytes().await.unwrap())
 }
 
-fn extract_tar(bytes: Bytes, dst: &Path) -> Result<()> {
-    let filename = dst.join("archive.tar.gz");
-    std::fs::write(&filename, bytes)?;
-
-    let output = Command::new("tar")
-        .args([
-            "xf",
-            filename.to_str().unwrap(),
-            &format!("--directory={}", dst.to_str().unwrap()),
-        ])
-        .output()?;
-
-    if !output.status.success() {
-        let stderr = String::from_utf8(output.stderr)?;
-        anyhow::bail!("Unable to extract archive, error: {}", stderr)
-    }
-
-    std::fs::remove_file(filename)?;
-
-    Ok(())
-}
-
-fn replace_current_executable(bin: PathBuf) -> Result<()> {
-    let bin_arg = std::env::args().next().expect("binary path argument");
-    let bin_path = PathBuf::from_str(&bin_arg).expect("valid path");
-
-    if !bin.exists() {
-        anyhow::bail!("unable to copy non-existing binary at path: {bin:?}")
-    }
-
-    std::fs::copy(bin, bin_path)?;
-    Ok(())
-}
-
 pub async fn try_update() -> Result<bool> {
     let latest = &latest_release().await?;
     let version = Version::parse(&latest.tag_name).unwrap();
     let current = Version::parse(env!("CARGO_PKG_VERSION")).expect("valid runtime version");
 
-    match version.cmp(&current) {
+    // match version.cmp(&current) {
+    match Ordering::Greater {
         Ordering::Equal => {
             println!("Je gebruikt de nieuwste versie {current}");
             Ok(false)
@@ -174,14 +138,23 @@ pub async fn try_update() -> Result<bool> {
 
             println!("Fetching binaries...");
             let latest = fetch_latest_bin().await?;
+            let cwd = std::env::current_dir()?;
+            let filename =format!("{}.latest.tar.gz", env!("CARGO_PKG_NAME"));
+            std::fs::write(cwd.join(filename), latest)?;
+            println!("Nieuwste versie is gedownload, herstart het programma om deze te activeren.");
 
-            println!("Unpacking binaries...");
-            let temp_dir = PathBuf::from_str("temp_unpack")?;
-            std::fs::create_dir(&temp_dir)?;
-            extract_tar(latest, &temp_dir)?;
 
-            println!("Programma probeert nu zichzelf te vervangen met de nieuwe versie, er wordt verwacht dat het programma crasht wanneer dit lukt.");
-            replace_current_executable(temp_dir.join(env!("CARGO_PKG_NAME")))?;
+            // println!("Unpacking binaries...");
+            // let temp_dir = std::env::temp_dir();
+            // extract_tar(latest, &temp_dir)?;
+            //
+            // let bin_path = temp_dir.join();
+            // let bin_content = std::fs::read(bin_path)?;
+            // std::fs::remove_dir_all(temp_dir)?;
+            //
+            // println!("Programma probeert nu zichzelf te vervangen met de nieuwe versie, er wordt verwacht dat het programma crasht wanneer dit lukt.");
+            //
+            //
 
             Ok(true)
         }
