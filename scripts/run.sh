@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+cd $(dirname $0)
+
 name=bol-scraper-empire
 archive_name=$name.latest.tar.gz
 
