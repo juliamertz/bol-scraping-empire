@@ -1,11 +1,9 @@
 use anyhow::Result;
 use bytes::Bytes;
+use lazy_static::lazy_static;
 use reqwest::header::{ACCEPT, USER_AGENT};
 use serde::{Deserialize, Serialize};
-use std::{
-    cmp::Ordering,
-    fmt::Display,
-};
+use std::{cmp::Ordering, fmt::Display};
 
 /// this program is meant to be distributed to non-techical people
 /// Automated updating makes the most sense for this usecase
@@ -58,8 +56,13 @@ impl Display for Version {
     }
 }
 
-//TODO: get repo uri from cargo.toml
-static REPO: &str = "juliamertz/bol-scraping-empire";
+lazy_static! {
+    static ref REPO: &'static str = {
+        let url = env!("CARGO_PKG_REPOSITORY");
+        url.strip_prefix("https://github.com/")
+            .expect("github repository url")
+    };
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Release {
@@ -68,7 +71,7 @@ pub struct Release {
 }
 
 async fn query_releases() -> Result<Vec<Release>> {
-    let url = format!("https://api.github.com/repos/{}/releases", REPO);
+    let url = format!("https://api.github.com/repos/{}/releases", *REPO);
 
     let client = reqwest::Client::new();
     let res = client
@@ -105,10 +108,10 @@ async fn fetch_latest_bin() -> Result<Bytes> {
         anyhow::bail!("Unsupported OS")
     };
 
-    let asset_filename = format!("{name}-{arch}-{vendor}-{kernel}.tar.gz");
+    let filename = format!("{name}-{arch}-{vendor}-{kernel}.tar.gz");
     let url = format!(
         "https://github.com/{}/releases/latest/download/{}",
-        REPO, asset_filename
+        *REPO, filename
     );
 
     let res = reqwest::get(url).await.unwrap();
@@ -138,7 +141,7 @@ pub async fn try_update() -> Result<bool> {
             println!("Fetching binaries...");
             let latest = fetch_latest_bin().await?;
             let cwd = std::env::current_dir()?;
-            let filename =format!("{}.latest.tar.gz", env!("CARGO_PKG_NAME"));
+            let filename = format!("{}.latest.tar.gz", env!("CARGO_PKG_NAME"));
             std::fs::write(cwd.join(filename), latest)?;
             println!("Nieuwste versie is gedownload, herstart het programma om deze te activeren.");
 

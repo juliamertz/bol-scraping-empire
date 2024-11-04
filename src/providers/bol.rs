@@ -23,7 +23,7 @@ pub async fn query_products(url: &str, pages: usize) -> Result<Products> {
         .flat_map(|res| res.unwrap())
         .collect::<Vec<_>>();
 
-    Ok(Products(results))
+    Ok(results.into())
 }
 
 fn parse_products(doc: Html) -> Vec<Product> {
@@ -32,6 +32,8 @@ fn parse_products(doc: Html) -> Vec<Product> {
     let mut buffer = Vec::with_capacity(RESULTS_PER_PAGE);
     for element in container.child_elements() {
         if let Err(_err) = parse_product(element, &mut buffer) {
+            // TODO: do something with this
+            // maybe keep stats or smth in other worksheet
             // eprintln!("no parsey: {err:#}")
         }
     }
@@ -50,7 +52,7 @@ lazy_static! {
 }
 
 fn parse_product(el: ElementRef<'_>, buffer: &mut Vec<Product>) -> Result<()> {
-    // TODO SVG IMAGES
+    // TODO: SVG IMAGES
     let image = el.select(&image_selector).next().context("Image source")?;
     let image = image.attr("src").unwrap_or(
         image

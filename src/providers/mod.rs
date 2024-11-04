@@ -98,6 +98,12 @@ impl Products {
     }
 }
 
+impl From<Vec<Product>> for Products {
+    fn from(value: Vec<Product>) -> Self {
+        Self(value)
+    }
+}
+
 impl Deref for Products {
     type Target = Vec<Product>;
 
