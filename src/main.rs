@@ -32,7 +32,12 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     #[cfg(feature = "updater")]
-    versioning::try_update().await?;
+    if let Err(err) = versioning::try_update().await {
+        eprintln!(
+            "Er ging iets fout tijdens het automatish updaten, error: {:?}",
+            err
+        )
+    }
 
     let url = read_line("Link naar zoekresultaten")?;
     let pages = read_line("Hoeveel paginas")?.parse().unwrap_or(1);
