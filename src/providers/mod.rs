@@ -54,6 +54,7 @@ pub struct Product {
     pub image: String,
     pub url: String,
     pub price: f64,
+    pub ean: Option<u64>,
 }
 
 #[derive(Debug)]
@@ -81,7 +82,7 @@ impl Products {
     pub fn as_worksheet(&self) -> Result<rust_xlsxwriter::Worksheet> {
         let mut worksheet = rust_xlsxwriter::Worksheet::new();
 
-        let column_names = ["title", "image", "url", "price"];
+        let column_names = ["title", "image", "url", "price", "ean"];
         for (col, name) in column_names.iter().enumerate() {
             worksheet.write(0, col as u16, *name)?;
         }
@@ -92,6 +93,9 @@ impl Products {
             worksheet.write(row, 1, &product.image)?;
             worksheet.write(row, 2, &product.url)?;
             worksheet.write(row, 3, product.price)?;
+            if let Some(ean) = product.ean {
+                worksheet.write(row, 4, ean)?;
+            }
         }
 
         Ok(worksheet)

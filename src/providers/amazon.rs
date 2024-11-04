@@ -115,6 +115,7 @@ fn parse_product(el: ElementRef<'_>, buffer: &mut Vec<Product>) -> Result<()> {
         price,
         image: image.to_string(),
         url: url.to_string(),
+        ean: None,
     };
 
     buffer.push(product);
