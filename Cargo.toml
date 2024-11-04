@@ -15,7 +15,7 @@ rust_xlsxwriter = "0.79.0"
 scraper = "0.20.0"
 tokio = { version = "1", features = ["full"] }
 bytes = { version = "1.8.0", optional = true }
-serde = { version = "1.0.214", optional = true }
+serde = { version = "1.0.214", features =["derive"], optional = true }
 serde_json = { version = "1.0.132", optional = true }
 
 [features]

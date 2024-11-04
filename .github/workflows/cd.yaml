@@ -50,19 +50,17 @@ jobs:
       - name: Build
         uses: actions-rs/cargo@v1
         with:
-          # use-cross: ${{ matrix.cross_arch }}
+          use-cross: ${{ matrix.cross_arch }}
           command: build
-          args: --locked --release 
-          #--target ${{ matrix.target }}
+          args: --locked --release --target ${{ matrix.target }}
 
       - name: Package
         shell: bash
         run: |
-          # cd target/${{ matrix.target }}/release
-          make build
-          tar czf bol-scraper-empire-${{ matrix.target }}.tar.gz --directory=dist .
+          cd target/${{ matrix.target }}/release
+          cp ../../../scripts/run.sh ./
+          tar czvf bol-scraper-empire-${{ matrix.target }}.tar.gz bol-scraper-empire run.sh
           shasum -a 256 bol-scraper-empire-${{ matrix.target }}.tar.gz > bol-scraper-empire-${{ matrix.target }}.sha256
-          esac;
 
       - name: Release
         uses: softprops/action-gh-release@v1
