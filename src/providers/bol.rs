@@ -3,10 +3,10 @@ use super::*;
 const RESULTS_PER_PAGE: usize = 24;
 
 async fn query_specifications(product: Product, state: &status::Status) -> Product {
-    state.incr_pending();
+    state.add_pending();
     match query_product_page(&product.url).await {
         Ok(specifications) => {
-            state.pending_done();
+            state.pending_success();
             Product {
                 title: product.title,
                 image: product.image,
@@ -31,12 +31,12 @@ pub async fn query_products(url: &str, pages: usize, state: status::Status) -> R
         let state = state.clone();
         let handle = tokio::spawn(async move {
             println!("querying page {}", i + 1);
-            state.incr_pending();
+            state.add_pending();
             let url = paginate_url(&url, i + 1);
             let doc = fetch_dom(&url).await.expect("valid dom");
 
             let products = parse_products(doc);
-            state.pending_done();
+            state.pending_success();
 
             let with_specifications = products
                 .into_iter()

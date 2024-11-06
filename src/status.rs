@@ -32,13 +32,13 @@ impl Status {
         Ok(())
     }
 
-    pub fn incr_pending(&self) {
+    pub fn add_pending(&self) {
         self.queries.total.fetch_add(1, Ordering::SeqCst);
         self.queries.pending.fetch_add(1, Ordering::SeqCst);
         self.render(&mut io::stdout()).unwrap();
     }
 
-    pub fn pending_done(&self) {
+    pub fn pending_success(&self) {
         self.queries.pending.fetch_sub(1, Ordering::SeqCst);
         self.queries.done.fetch_add(1, Ordering::SeqCst);
         self.render(&mut io::stdout()).unwrap();
