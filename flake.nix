@@ -35,15 +35,15 @@
             with pkgs;
             [
               openssl
-              libxkbcommon
-              vulkan-loader
-              xorg.libX11
-              xorg.libXcursor
-              xorg.libXi
-              xorg.libXrandr
-              alsa-lib.dev
-              wayland.dev
-              udev.dev
+              # libxkbcommon
+              # vulkan-loader
+              # xorg.libX11
+              # xorg.libXcursor
+              # xorg.libXi
+              # xorg.libXrandr
+              # alsa-lib.dev
+              # wayland.dev
+              # udev.dev
             ]
             ++ lib.optionals stdenv.isDarwin (
               with darwin.apple_sdk.frameworks;
@@ -80,6 +80,10 @@
                 pkgs = import (inputs.nixpkgs) { inherit system overlays; };
               in
               buildInputs
+              ++ (with pkgs; [
+                gh
+                dasel
+              ])
               ++ (with pkgs.rust-bin; [
                 (stable.latest.minimal.override {
                   extensions = [
