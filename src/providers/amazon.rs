@@ -2,15 +2,18 @@ use super::*;
 
 const RESULTS_PER_PAGE: usize = 56;
 
-pub async fn query_products(url: &str, pages: usize) -> Result<Products> {
+pub async fn query_products(url: &str, pages: usize, state: status::Status) -> Result<Products> {
     let mut handles = Vec::with_capacity(pages);
 
     for i in 0..pages {
         let url = url.to_owned();
+        let state = state.clone();
         let handle = tokio::spawn(async move {
             println!("querying page {}", i + 1);
+            state.incr_pending();
             let url = paginate_url(&url, i);
             let doc = fetch_dom(&url).await.expect("valid dom");
+            state.pending_done();
             parse_products(doc)
         });
 
@@ -60,24 +63,24 @@ fn parse_product(el: ElementRef<'_>, buffer: &mut Vec<Product>) -> Result<()> {
     let image = el
         .select(&image_selector)
         .next()
-        .expect("product image")
+        .context("product image")?
         .attr("src")
-        .expect("product image source");
+        .context("product image source")?;
     let title_wrapper = el
         .select(&title_wrapper_selector)
         .next()
-        .expect("a title wrapper");
+        .context("a title wrapper")?;
     let title = title_wrapper
         .select(&title_selector)
         .next()
-        .expect("a title")
+        .context("a title")?
         .inner_html();
 
     if sponsored_regex.is_match(&title) {
         anyhow::bail!("Sponsored product");
     }
 
-    let url = title_wrapper.attr("href").expect("product to have url");
+    let url = title_wrapper.attr("href").context("product to have url")?;
 
     let price = match el.select(&price_old_selector).next() {
         Some(price) => price
@@ -86,7 +89,7 @@ fn parse_product(el: ElementRef<'_>, buffer: &mut Vec<Product>) -> Result<()> {
             .unwrap()
             .inner_html()
             .strip_prefix("€")
-            .expect("price to have euro symbol prefix")
+            .context("price to have euro symbol prefix")?
             .to_string(),
         None => {
             let price_whole = el
@@ -108,7 +111,7 @@ fn parse_product(el: ElementRef<'_>, buffer: &mut Vec<Product>) -> Result<()> {
     let price: f64 = price
         .replace(",", ".")
         .parse()
-        .expect("Expected valid parsable floating point price");
+        .context("Expected valid parsable floating point price")?;
 
     let product = Product {
         title,

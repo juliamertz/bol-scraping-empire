@@ -2,38 +2,48 @@ use super::*;
 
 const RESULTS_PER_PAGE: usize = 24;
 
-async fn query_specifications(product: Product) -> Product {
+async fn query_specifications(product: Product, state: &status::Status) -> Product {
+    state.incr_pending();
     match query_product_page(&product.url).await {
-        Ok(specifications) => Product {
-            title: product.title,
-            image: product.image,
-            price: product.price,
-            url: product.url,
-            ean: Some(specifications.ean),
-        },
+        Ok(specifications) => {
+            state.pending_done();
+            Product {
+                title: product.title,
+                image: product.image,
+                price: product.price,
+                url: product.url,
+                ean: Some(specifications.ean),
+            }
+        }
         Err(err) => {
             eprintln!("Error while trying to query product page: {err:?}");
+            state.pending_errored();
             product
         }
     }
 }
 
-pub async fn query_products(url: &str, pages: usize) -> Result<Products> {
+pub async fn query_products(url: &str, pages: usize, state: status::Status) -> Result<Products> {
     let mut handles = Vec::with_capacity(pages);
 
     for i in 0..pages {
         let url = url.to_owned();
+        let state = state.clone();
         let handle = tokio::spawn(async move {
             println!("querying page {}", i + 1);
+            state.incr_pending();
             let url = paginate_url(&url, i + 1);
             let doc = fetch_dom(&url).await.expect("valid dom");
 
-            let products = parse_products(doc)
+            let products = parse_products(doc);
+            state.pending_done();
+
+            let with_specifications = products
                 .into_iter()
-                .map(query_specifications)
+                .map(|p| query_specifications(p, &state))
                 .collect::<Vec<_>>();
 
-            futures::future::join_all(products).await
+            futures::future::join_all(with_specifications).await
         });
 
         handles.push(handle);

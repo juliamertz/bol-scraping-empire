@@ -1,4 +1,5 @@
 mod providers;
+mod status;
 #[cfg(feature = "updater")]
 mod versioning;
 
@@ -31,6 +32,8 @@ static OUTFILE: &str = "products.xlsx";
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
+    let state = status::Status::new();
+
     #[cfg(feature = "updater")]
     if let Err(err) = versioning::try_update().await {
         eprintln!(
@@ -43,7 +46,7 @@ async fn main() -> Result<()> {
     let pages = read_line("Hoeveel paginas")?.parse().unwrap_or(1);
 
     let provider = providers::Provider::from_url(&url)?;
-    let products = provider.query_products(&url, pages).await?;
+    let products = provider.query_products(&url, pages, state).await?;
 
     let mut workbook = Workbook::new();
     workbook.push_worksheet(products.as_worksheet()?);

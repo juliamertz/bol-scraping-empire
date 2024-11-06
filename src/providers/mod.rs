@@ -9,6 +9,8 @@ pub use scraper::{selectable::Selectable, ElementRef, Html, Selector};
 
 use std::ops::{Deref, DerefMut};
 
+use crate::status;
+
 #[derive(clap::Subcommand, Debug)]
 pub enum Provider {
     Amazon,
@@ -16,10 +18,15 @@ pub enum Provider {
 }
 
 impl Provider {
-    pub async fn query_products(&self, url: &str, pages: usize) -> Result<Products> {
+    pub async fn query_products(
+        &self,
+        url: &str,
+        pages: usize,
+        state: status::Status,
+    ) -> Result<Products> {
         match self {
-            Self::Amazon => amazon::query_products(url, pages).await,
-            Self::Bol => bol::query_products(url, pages).await,
+            Self::Amazon => amazon::query_products(url, pages, state).await,
+            Self::Bol => bol::query_products(url, pages, state).await,
         }
     }
 
