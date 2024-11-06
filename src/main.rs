@@ -51,7 +51,7 @@ async fn main() -> Result<()> {
     let mut workbook = Workbook::new();
     workbook.push_worksheet(products.as_worksheet()?);
 
-    println!("output excel sheet gereed");
+    println!("Output excel sheet gereed...");
 
     let mut outfile = PathBuf::from_str(OUTFILE).unwrap();
     if cli.ask_location {

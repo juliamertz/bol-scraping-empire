@@ -1,14 +1,33 @@
 use anyhow::Result;
+use core::sync;
 use crossterm::{cursor, terminal, ExecutableCommand, QueueableCommand};
+use std::fmt::Display;
 use std::io::{self};
+use std::sync::atomic::Ordering;
 use std::sync::Arc;
-use std::{fmt::Display, sync::atomic::AtomicU32};
+
+#[derive(Debug, Default)]
+pub struct AtomicU32(sync::atomic::AtomicU32);
+
+static ORDER: Ordering = Ordering::SeqCst;
+
+impl AtomicU32 {
+    pub fn add(&self, val: u32) -> u32 {
+        self.0.fetch_add(val, ORDER)
+    }
+    pub fn subtract(&self, val: u32) -> u32 {
+        self.0.fetch_sub(val, ORDER)
+    }
+    pub fn load(&self) -> u32 {
+        self.0.load(ORDER)
+    }
+}
 
 #[derive(Default, Debug)]
 pub struct QueryStatus {
     pub total: AtomicU32,
     pub pending: AtomicU32,
-    pub done: AtomicU32,
+    pub success: AtomicU32,
     pub errored: AtomicU32,
 }
 
@@ -17,7 +36,6 @@ pub struct Status {
     queries: Arc<QueryStatus>,
 }
 
-use std::sync::atomic::Ordering;
 impl Status {
     pub fn new() -> Self {
         Self {
@@ -33,37 +51,29 @@ impl Status {
     }
 
     pub fn add_pending(&self) {
-        self.queries.total.fetch_add(1, Ordering::SeqCst);
-        self.queries.pending.fetch_add(1, Ordering::SeqCst);
+        self.queries.total.add(1);
+        self.queries.pending.add(1);
         self.render(&mut io::stdout()).unwrap();
     }
 
     pub fn pending_success(&self) {
-        self.queries.pending.fetch_sub(1, Ordering::SeqCst);
-        self.queries.done.fetch_add(1, Ordering::SeqCst);
+        self.queries.pending.subtract(1);
+        self.queries.success.add(1);
         self.render(&mut io::stdout()).unwrap();
     }
 
     pub fn pending_errored(&self) {
-        self.queries.pending.fetch_sub(1, Ordering::SeqCst);
-        self.queries.errored.fetch_add(1, Ordering::SeqCst);
+        self.queries.pending.subtract(1);
+        self.queries.errored.add(1);
         self.render(&mut io::stdout()).unwrap();
     }
 }
 
 impl Display for Status {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "total: {}", self.queries.total.load(Ordering::SeqCst))?;
-        writeln!(
-            f,
-            "pending: {}",
-            self.queries.pending.load(Ordering::SeqCst)
-        )?;
-        writeln!(f, "done: {}", self.queries.done.load(Ordering::SeqCst))?;
-        writeln!(
-            f,
-            "errored: {}",
-            self.queries.errored.load(Ordering::SeqCst)
-        )
+        writeln!(f, "total: {}", self.queries.total.load())?;
+        writeln!(f, "pending: {}", self.queries.pending.load())?;
+        writeln!(f, "done: {}", self.queries.success.load())?;
+        writeln!(f, "errored: {}", self.queries.errored.load())
     }
 }
