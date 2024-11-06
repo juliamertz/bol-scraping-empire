@@ -102,19 +102,19 @@ fn parse_product_page(doc: Html) -> Result<Specifications> {
         let section = section
             .select(&specs_section_selector)
             .next()
-            .expect("Specifications wrapper in section");
+            .context("Specifications wrapper in section")?;
 
         for item in section.child_elements() {
             let spec_title = item
                 .select(&specs_title_selector)
                 .next()
-                .expect("A specification title")
+                .context("A specification title")?
                 .inner_html();
 
             let spec_value = item
                 .select(&specs_value_selector)
                 .next()
-                .expect("A specification value")
+                .context("A specification value")?
                 .inner_html();
 
             if spec_title.trim() == "EAN" {
@@ -154,15 +154,15 @@ fn parse_product_item(el: ElementRef<'_>, buffer: &mut Vec<Product>) -> Result<(
     let title = el
         .select(&title_selector)
         .next()
-        .expect("a title")
+        .context("a title")?
         .inner_html();
 
     let url = el
         .select(&title_selector)
         .next()
-        .expect("a title")
+        .context("a title")?
         .attr("href")
-        .expect("product to have url");
+        .context("product to have url")?;
 
     for item in buffer.iter() {
         if item.url == url {
@@ -177,14 +177,14 @@ fn parse_product_item(el: ElementRef<'_>, buffer: &mut Vec<Product>) -> Result<(
             .next()
             .context("Expected product to have a price")?
             .attr("content")
-            .expect("price content")
+            .context("price content")?
             .parse()
-            .expect("valid f64 price"),
+            .context("valid f64 price")?,
     };
     let price: f64 = price
         .replace(",", ".")
         .parse()
-        .expect("Expected valid parsable floating point price");
+        .context("Expected valid parsable floating point price")?;
 
     let product = Product {
         title,
