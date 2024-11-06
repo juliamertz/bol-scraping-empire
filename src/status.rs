@@ -1,10 +1,11 @@
 use anyhow::Result;
 use core::sync;
 use crossterm::{cursor, terminal, ExecutableCommand, QueueableCommand};
-use std::fmt::Display;
-use std::io::{self};
-use std::sync::atomic::Ordering;
-use std::sync::Arc;
+use std::{
+    fmt::Display,
+    io::{self},
+    sync::{atomic::Ordering, Arc},
+};
 
 #[derive(Debug, Default)]
 pub struct AtomicU32(sync::atomic::AtomicU32);
@@ -12,11 +13,11 @@ pub struct AtomicU32(sync::atomic::AtomicU32);
 static ORDER: Ordering = Ordering::SeqCst;
 
 impl AtomicU32 {
-    pub fn add(&self, val: u32) -> u32 {
-        self.0.fetch_add(val, ORDER)
+    pub fn increment(&self) -> u32 {
+        self.0.fetch_add(1, ORDER)
     }
-    pub fn subtract(&self, val: u32) -> u32 {
-        self.0.fetch_sub(val, ORDER)
+    pub fn decrement(&self) -> u32 {
+        self.0.fetch_sub(1, ORDER)
     }
     pub fn load(&self) -> u32 {
         self.0.load(ORDER)
@@ -51,20 +52,20 @@ impl Status {
     }
 
     pub fn add_pending(&self) {
-        self.queries.total.add(1);
-        self.queries.pending.add(1);
+        self.queries.total.increment();
+        self.queries.pending.increment();
         self.render(&mut io::stdout()).unwrap();
     }
 
     pub fn pending_success(&self) {
-        self.queries.pending.subtract(1);
-        self.queries.success.add(1);
+        self.queries.pending.decrement();
+        self.queries.success.increment();
         self.render(&mut io::stdout()).unwrap();
     }
 
     pub fn pending_errored(&self) {
-        self.queries.pending.subtract(1);
-        self.queries.errored.add(1);
+        self.queries.pending.decrement();
+        self.queries.errored.increment();
         self.render(&mut io::stdout()).unwrap();
     }
 }

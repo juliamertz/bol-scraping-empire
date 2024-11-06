@@ -1,12 +1,12 @@
+//! this program is meant to be distributed to non-techical people
+//! Automated updating makes the most sense for this usecase
+
 use anyhow::Result;
 use bytes::Bytes;
 use lazy_static::lazy_static;
 use reqwest::header::{ACCEPT, USER_AGENT};
 use serde::{Deserialize, Serialize};
 use std::{cmp::Ordering, fmt::Display};
-
-/// this program is meant to be distributed to non-techical people
-/// Automated updating makes the most sense for this usecase
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Version {
