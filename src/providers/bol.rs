@@ -58,10 +58,8 @@ fn parse_products(doc: Html) -> Vec<Product> {
 
     let mut buffer = Vec::with_capacity(RESULTS_PER_PAGE);
     for element in container.child_elements() {
-        if let Err(_err) = parse_product_item(element, &mut buffer) {
-            // TODO: do something with this
-            // maybe keep stats or smth in other worksheet
-            // eprintln!("no parsey: {err:#}")
+        if let Err(err) = parse_product_item(element, &mut buffer) {
+            eprintln!("failed to parse product listing: {err:#}")
         }
     }
 
@@ -80,10 +78,10 @@ pub struct Specifications {
 }
 
 fn parse_product_page(doc: Html) -> Result<Specifications> {
-    let specs = doc
-        .select(&specs_container_selector)
-        .next()
-        .expect("product to have a specs list");
+    let specs = match doc.select(&specs_container_selector).next() {
+        Some(specs) => specs,
+        None => anyhow::bail!("No specs list"),
+    };
 
     let mut ean_code: Option<u64> = None;
 
