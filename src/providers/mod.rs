@@ -2,14 +2,24 @@ pub mod amazon;
 pub mod bol;
 
 pub use anyhow::{Context, Result};
-pub use bol_scraper_empire::fetch_dom;
 pub use lazy_static::lazy_static;
 pub use regex::Regex;
 pub use scraper::{selectable::Selectable, ElementRef, Html, Selector};
 
+use crate::status;
+use reqwest::StatusCode;
 use std::ops::{Deref, DerefMut};
 
-use crate::status;
+pub async fn fetch_dom(url: &str) -> Result<Html> {
+    let res = reqwest::get(url).await?;
+    if res.status() != StatusCode::OK {
+        anyhow::bail!("Error while fetching DOM, got status {:?}", res.status())
+    }
+
+    let body = res.text().await?;
+
+    Ok(Html::parse_document(&body))
+}
 
 #[derive(clap::Subcommand, Debug)]
 pub enum Provider {

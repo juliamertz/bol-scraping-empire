@@ -1,3 +1,4 @@
+mod api;
 mod providers;
 mod status;
 #[cfg(feature = "updater")]
@@ -31,7 +32,6 @@ static OUTFILE: &str = "products.xlsx";
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
-
     let state = status::Status::new();
 
     #[cfg(feature = "updater")]

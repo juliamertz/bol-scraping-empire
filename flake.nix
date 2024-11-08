@@ -33,18 +33,21 @@
             ++ lib.optionals stdenv.isDarwin [ makeBinaryWrapper ];
           buildInputs =
             with pkgs;
-            [
-              openssl
-              # libxkbcommon
-              # vulkan-loader
-              # xorg.libX11
-              # xorg.libXcursor
-              # xorg.libXi
-              # xorg.libXrandr
-              # alsa-lib.dev
-              # wayland.dev
-              # udev.dev
-            ]
+            [ openssl ]
+            ++ lib.optionals stdenv.isLinux (
+              with pkgs;
+              [
+                libxkbcommon
+                vulkan-loader
+                xorg.libX11
+                xorg.libXcursor
+                xorg.libXi
+                xorg.libXrandr
+                alsa-lib.dev
+                wayland.dev
+                udev.dev
+              ]
+            )
             ++ lib.optionals stdenv.isDarwin (
               with darwin.apple_sdk.frameworks;
               [
