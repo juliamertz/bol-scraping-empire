@@ -433,10 +433,15 @@ name = "cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bytes",
  "clap",
+ "lazy_static",
+ "reqwest",
  "rfd",
  "rust_xlsxwriter",
- "scraper 0.3.1",
+ "scraping",
+ "serde",
+ "serde_json",
  "tokio",
 ]
 
@@ -2065,26 +2070,6 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "scraper"
-version = "0.3.1"
-dependencies = [
- "anyhow",
- "bytes",
- "clap",
- "crossterm",
- "futures",
- "lazy_static",
- "regex",
- "reqwest",
- "rfd",
- "rust_xlsxwriter",
- "scraper 0.20.0",
- "serde",
- "serde_json",
- "tokio",
-]
-
-[[package]]
-name = "scraper"
 version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b90460b31bfe1fc07be8262e42c665ad97118d4585869de9345a84d501a9eaf0"
@@ -2097,6 +2082,26 @@ dependencies = [
  "once_cell",
  "selectors",
  "tendril",
+]
+
+[[package]]
+name = "scraping"
+version = "0.3.1"
+dependencies = [
+ "anyhow",
+ "bytes",
+ "clap",
+ "crossterm",
+ "futures",
+ "lazy_static",
+ "regex",
+ "reqwest",
+ "rfd",
+ "rust_xlsxwriter",
+ "scraper",
+ "serde",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]

@@ -1,14 +1,13 @@
-use scraper::{self, providers::Provider, status::Status};
-
-// #[cfg(feature = "updater")]
-// mod versioning;
+use scraping::{self, providers::Provider, status::Status};
+#[cfg(feature = "updater")]
+mod versioning;
 
 use anyhow::Result;
 use rust_xlsxwriter::Workbook;
 use std::{
     io::{self, BufRead},
     path::PathBuf,
-    str::FromStr,
+    str::FromStr, sync::Arc,
 };
 
 use clap::Parser;
@@ -31,15 +30,15 @@ static OUTFILE: &str = "products.xlsx";
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
-    let state = Status::new();
+    let state = Arc::new(Status::new());
 
-    // #[cfg(feature = "updater")]
-    // if let Err(err) = versioning::try_update().await {
-    //     eprintln!(
-    //         "Er ging iets fout tijdens het automatish updaten, error: {:?}",
-    //         err
-    //     )
-    // }
+    #[cfg(feature = "updater")]
+    if let Err(err) = versioning::try_update().await {
+        eprintln!(
+            "Er ging iets fout tijdens het automatish updaten, error: {:?}",
+            err
+        )
+    }
 
     let url = read_line("Link naar zoekresultaten")?;
     let pages = read_line("Hoeveel paginas")?.parse().unwrap_or(1);

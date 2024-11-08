@@ -59,6 +59,7 @@ jobs:
         run: |
           cd target/${{ matrix.target }}/release
           cp ../../../scripts/run.sh ./run
+          mv cli bol-scraper-empire
           tar czvf bol-scraper-empire-${{ matrix.target }}.tar.gz bol-scraper-empire run
           shasum -a 256 bol-scraper-empire-${{ matrix.target }}.tar.gz > bol-scraper-empire-${{ matrix.target }}.sha256
 
