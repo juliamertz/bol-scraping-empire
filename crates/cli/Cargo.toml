@@ -1,0 +1,12 @@
+[package]
+name = "cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+scraper = { version = "0.3.1", path = "../scraper" }
+clap = { version = "4.5.20", features = ["derive"] }
+anyhow = "1.0.91"
+rfd = "0.15.0"
+rust_xlsxwriter = "0.79.0"
+tokio = { version = "1", features = ["full"] }
