@@ -2,7 +2,11 @@ use super::*;
 
 const RESULTS_PER_PAGE: usize = 56;
 
-pub async fn query_products(url: &str, pages: usize, state: status::GlobalStatus) -> Result<Products> {
+pub async fn query_products(
+    url: &str,
+    pages: usize,
+    state: status::GlobalStatus,
+) -> Result<Products> {
     let mut handles = Vec::with_capacity(pages);
 
     for i in 0..pages {

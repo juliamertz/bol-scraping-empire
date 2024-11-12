@@ -11,7 +11,7 @@ use std::{
     str::FromStr,
     sync::Arc,
 };
-use uploader::api::{self, bol::Offer};
+use uploader::api::bol::Offer;
 
 use clap::Parser;
 
@@ -40,7 +40,7 @@ async fn main() -> Result<()> {
     // client.authenticate(&conf.bol).await?;
 
     let offer = Offer::new("30inch dildo", "231231", 100.00, 1, None);
-        dbg!(offer);
+    dbg!(offer);
     // client.create_offer().await?;
 
     std::process::exit(0);
