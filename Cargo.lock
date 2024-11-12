@@ -430,7 +430,7 @@ checksum = "1462739cb27611015575c0c11df5df7601141071f07518d56fcc1be504cbec97"
 
 [[package]]
 name = "cli"
-version = "0.1.0"
+version = "0.3.2"
 dependencies = [
  "anyhow",
  "bytes",
@@ -2086,7 +2086,7 @@ dependencies = [
 
 [[package]]
 name = "scraping"
-version = "0.3.1"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "bytes",
@@ -2617,6 +2617,17 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 [[package]]
 name = "uploader"
 version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "futures",
+ "lazy_static",
+ "reqwest",
+ "rust_xlsxwriter",
+ "serde",
+ "serde_json",
+ "tokio",
+]
 
 [[package]]
 name = "url"

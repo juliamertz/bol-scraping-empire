@@ -3,14 +3,14 @@ use reqwest::Method;
 use serde::{Deserialize, Serialize};
 
 pub struct Secrets {
-    pub api_key: String,
+    pub client_id: String,
     pub client_secret: String,
 }
 
 impl Secrets {
-    pub fn new(api_key: &str, client_secret: &str) -> Self {
+    pub fn new(client_id: &str, client_secret: &str) -> Self {
         Self {
-            api_key: api_key.into(),
+            client_id: client_id.into(),
             client_secret: client_secret.into(),
         }
     }
