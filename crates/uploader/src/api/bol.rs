@@ -46,6 +46,12 @@ impl Client {
         Self::default()
     }
 
+    pub async fn new_with_session(creds: &Credentials) -> Result<Self> {
+        let mut client = Self::new();
+        client.authenticate(creds).await?;
+        Ok(client)
+    }
+
     pub async fn authenticate(&mut self, creds: &Credentials) -> Result<()> {
         let res = reqwest::Client::new()
             .post("https://login.bol.com/token?grant_type=client_credentials")
@@ -87,6 +93,8 @@ impl Client {
             .header(header::AUTHORIZATION, format!("Bearer {}", access_token))
             .header(header::CONTENT_TYPE, CONTENT_TYPE);
 
+        dbg!(&req);
+
         let res = match body {
             Some(data) => req.body(data),
             None => req,
@@ -103,9 +111,10 @@ impl Client {
         let res = self.request(Method::POST, "/offer", data).await?;
 
         dbg!(&res);
-        if res.status() != StatusCode::ACCEPTED {
-            anyhow::bail!("Expected status Accepted got: {}", res.status())
-        }
+        dbg!(&res.text().await?);
+        // if res.status() != StatusCode::ACCEPTED {
+        //     anyhow::bail!("Expected status 202 Accepted got {}", res.status())
+        // }
 
         Ok(())
     }

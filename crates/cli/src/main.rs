@@ -11,6 +11,7 @@ use std::{
     str::FromStr,
     sync::Arc,
 };
+use uploader::api::bol;
 use uploader::api::bol::Offer;
 
 use clap::Parser;
@@ -39,10 +40,11 @@ async fn main() -> Result<()> {
     let state = Arc::new(Status::new());
 
     // let conf = config::initialize()?;
-    // let mut client = api::bol::Client::new();
-    // client.authenticate(&conf.bol).await?;
-    // dbg!(offer);
-    // client.create_offer().await?;
+    // let client = bol::Client::new_with_session(&conf.bol).await?;
+    // dbg!(&client);
+    // let offer = Offer::new("Belenthi Digitale Kindercamera - Fototoestel voor kinderen - Speelgoedcamera - HD 1080p - Incl. accessoires - Vlog camera kinderen - Roze", "8720938943591", 34.99, 1, None);
+    // dbg!(&offer);
+    // client.create_offer(&offer).await?;
     // std::process::exit(0);
 
     #[cfg(feature = "updater")]
@@ -54,7 +56,7 @@ async fn main() -> Result<()> {
     }
 
     let url = read_line("Link naar zoekresultaten")?;
-    let pages = read_line("Hoeveel paginas")?.parse().unwrap_or(1);
+    let pages = read_line("Hoeveel paginas? (1)")?.parse().unwrap_or(1);
 
     let provider = Provider::from_url(&url)?;
     let products = provider.query_products(&url, pages, state).await?;
