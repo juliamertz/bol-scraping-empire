@@ -18,8 +18,11 @@ use clap::Parser;
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct Cli {
-    #[arg(long, default_value = "true")]
+    #[arg(long)]
     ask_location: bool,
+
+    #[arg(long)]
+    location: Option<PathBuf>,
 }
 
 fn read_line(msg: &str) -> std::io::Result<String> {
@@ -35,15 +38,12 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
     let state = Arc::new(Status::new());
 
-    let conf = config::initialize()?;
+    // let conf = config::initialize()?;
     // let mut client = api::bol::Client::new();
     // client.authenticate(&conf.bol).await?;
-
-    let offer = Offer::new("30inch dildo", "231231", 100.00, 1, None);
-    dbg!(offer);
+    // dbg!(offer);
     // client.create_offer().await?;
-
-    std::process::exit(0);
+    // std::process::exit(0);
 
     #[cfg(feature = "updater")]
     if let Err(err) = versioning::try_update().await {
@@ -65,7 +65,9 @@ async fn main() -> Result<()> {
     println!("Output excel sheet gereed...");
 
     let mut outfile = PathBuf::from_str(OUTFILE).unwrap();
-    if cli.ask_location {
+    if let Some(path) = cli.location {
+        outfile = path;
+    } else if cli.ask_location {
         outfile = rfd::FileDialog::new()
             .set_file_name(OUTFILE)
             .save_file()

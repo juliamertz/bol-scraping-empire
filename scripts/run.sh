@@ -5,7 +5,7 @@ cd $(dirname $0)
 name=bol-scraper-empire
 archive_name=$name.latest.tar.gz
 
-./$name
+./$name --ask-location
 return_value=$?
 
 if [ $return_value -eq 169 ]; then
@@ -14,9 +14,9 @@ if [ $return_value -eq 169 ]; then
     tar xf $archive_name --directory $temp_dir
     rm $archive_name
     cp -v $temp_dir/* ./
-    rm -rf $temp_dir
+    rm -rf $temp_dir 
 
-    ./$name
+    ./$name --ask-location
   else
     echo Er is iets fout gegaan tijdens het updaten
     echo Programma gaf een update status code maar er is geen archief gevonden van de laatste release.
