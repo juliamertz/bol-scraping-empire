@@ -2,7 +2,7 @@ use anyhow::Result;
 use core::sync;
 use crossterm::{cursor, terminal, ExecutableCommand, QueueableCommand};
 use std::{
-    fmt::{Display, Write},
+    fmt::Display,
     io::{self},
     sync::{atomic::Ordering, Arc},
 };
