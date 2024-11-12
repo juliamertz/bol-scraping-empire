@@ -13,3 +13,4 @@ rust_xlsxwriter = "0.79.0"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0.214", features = ["derive"] }
 serde_json = { version = "1.0.132" }
+base64 = "0.22.1"

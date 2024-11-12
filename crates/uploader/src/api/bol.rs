@@ -1,13 +1,15 @@
 use anyhow::Result;
-use reqwest::Method;
+use base64::Engine;
+use reqwest::{header, Method, StatusCode};
 use serde::{Deserialize, Serialize};
 
-pub struct Secrets {
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Credentials {
     pub client_id: String,
     pub client_secret: String,
 }
 
-impl Secrets {
+impl Credentials {
     pub fn new(client_id: &str, client_secret: &str) -> Self {
         Self {
             client_id: client_id.into(),
@@ -16,31 +18,68 @@ impl Secrets {
     }
 }
 
-pub struct Client {
-    secrets: Secrets,
+#[derive(Serialize, Deserialize)]
+struct AuthResponse {
+    access_token: String,
 }
 
+#[derive(Default, Debug)]
+pub struct Client {
+    /// JWT token containing expiration etc...
+    pub access_token: Option<String>,
+}
+
+static CONTENT_TYPE: &str = "application/vnd.retailer.v10+json";
+
 impl Client {
-    pub fn new(secrets: Secrets) -> Self {
-        Self { secrets }
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub async fn authenticate(&mut self, creds: &Credentials) -> Result<()> {
+        use base64::prelude::BASE64_STANDARD as base64;
+
+        let client = reqwest::Client::new();
+        let token = base64.encode(format!("{}:{}", creds.client_id, creds.client_secret));
+        let res = client
+            .post("https://login.bol.com/token?grant_type=client_credentials")
+            .header(header::CONTENT_LENGTH, 0)
+            .header(header::AUTHORIZATION, format!("Basic {token}"))
+            .send()
+            .await?;
+
+        if res.status() != StatusCode::OK {
+            anyhow::bail!(
+                "non Ok status code when authenticating with bol: {}",
+                res.status()
+            )
+        }
+
+        let content = &res.text().await?;
+        let data = serde_json::from_str::<AuthResponse>(content)?;
+        self.access_token = Some(data.access_token);
+
+        Ok(())
     }
 
     async fn request(
         &self,
-        method: reqwest::Method,
+        method: Method,
         endpoint: &str,
         body: Option<Vec<u8>>,
     ) -> Result<reqwest::Response> {
         let client = reqwest::Client::new();
         let url = format!("https://api.bol.com/retailer{}", endpoint);
+        let access_token = match self.access_token {
+            Some(ref token) => token,
+            None => anyhow::bail!("Client is not authenticated."),
+        };
 
         let req = client
             .request(method, url)
-            .header(reqwest::header::ACCEPT, "application/vnd.retailer.v10+json")
-            .header(
-                reqwest::header::CONTENT_TYPE,
-                "application/vnd.retailer.v10+json",
-            );
+            .header(header::ACCEPT, CONTENT_TYPE)
+            .header(header::AUTHORIZATION, format!("Bearer {}", access_token))
+            .header(header::CONTENT_TYPE, CONTENT_TYPE);
 
         let res = match body {
             Some(data) => req.body(data),

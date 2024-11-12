@@ -1,3 +1,4 @@
+mod config;
 use scraping::{self, providers::Provider, status::Status};
 #[cfg(feature = "updater")]
 mod versioning;
@@ -7,8 +8,10 @@ use rust_xlsxwriter::Workbook;
 use std::{
     io::{self, BufRead},
     path::PathBuf,
-    str::FromStr, sync::Arc,
+    str::FromStr,
+    sync::Arc,
 };
+use uploader::api;
 
 use clap::Parser;
 
@@ -31,6 +34,14 @@ static OUTFILE: &str = "products.xlsx";
 async fn main() -> Result<()> {
     let cli = Cli::parse();
     let state = Arc::new(Status::new());
+
+    let conf = config::initialize()?;
+    let mut client = api::bol::Client::new();
+    client.authenticate(&conf.bol).await?;
+
+    dbg!(conf);
+    dbg!(client);
+    std::process::exit(0);
 
     #[cfg(feature = "updater")]
     if let Err(err) = versioning::try_update().await {
