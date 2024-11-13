@@ -1,4 +1,4 @@
-mod config;
+// mod config;
 use scraping::{self, providers::Provider, status::Status};
 #[cfg(feature = "updater")]
 mod versioning;
@@ -35,7 +35,7 @@ static OUTFILE: &str = "products.xlsx";
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
-    let _conf = config::read()?;
+    // let conf = config::read()?;
 
     let state = Status::new(|status| {
         let mut stdout = io::stdout();
@@ -45,12 +45,6 @@ async fn main() -> Result<()> {
             .expect("to clear terminal");
         write!(stdout, "{status}").expect("to write status into stdout");
     });
-
-    // let client = uploader::bol::Client::new_with_session(&conf.bol).await?;
-    // let offer = uploader::types::Offer::new("Belenthi Digitale Kindercamera - Fototoestel voor kinderen - Speelgoedcamera - HD 1080p - Incl. accessoires - Vlog camera kinderen - Roze", "8720938943591", 34.99, 1, None);
-    // dbg!(&offer);
-    // client.create_offer(&offer).await?;
-    // std::process::exit(0);
 
     #[cfg(feature = "updater")]
     if let Err(err) = versioning::try_update().await {
