@@ -1,5 +1,6 @@
 mod config;
 use scraping::{self, providers::Provider, status::Status};
+use uploader::api;
 #[cfg(feature = "updater")]
 mod versioning;
 
@@ -45,13 +46,12 @@ async fn main() -> Result<()> {
         write!(stdout, "{status}").expect("to write status into stdout");
     });
 
-    // let conf = config::initialize()?;
-    // let client = bol::Client::new_with_session(&conf.bol).await?;
-    // dbg!(&client);
-    // let offer = Offer::new("Belenthi Digitale Kindercamera - Fototoestel voor kinderen - Speelgoedcamera - HD 1080p - Incl. accessoires - Vlog camera kinderen - Roze", "8720938943591", 34.99, 1, None);
+    let conf = config::initialize()?;
+    let client = api::bol::Client::new_with_session(&conf.bol).await?;
+    // let offer = api::types::Offer::new("Belenthi Digitale Kindercamera - Fototoestel voor kinderen - Speelgoedcamera - HD 1080p - Incl. accessoires - Vlog camera kinderen - Roze", "8720938943591", 34.99, 1, None);
     // dbg!(&offer);
     // client.create_offer(&offer).await?;
-    // std::process::exit(0);
+    std::process::exit(0);
 
     #[cfg(feature = "updater")]
     if let Err(err) = versioning::try_update().await {

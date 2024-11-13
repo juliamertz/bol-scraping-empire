@@ -12,15 +12,6 @@ pub struct Credentials {
     pub client_secret: String,
 }
 
-impl Credentials {
-    pub fn new(client_id: &str, client_secret: &str) -> Self {
-        Self {
-            client_id: client_id.into(),
-            client_secret: client_secret.into(),
-        }
-    }
-}
-
 impl Display for Credentials {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let token = format!("{}:{}", self.client_id, self.client_secret);
@@ -29,15 +20,17 @@ impl Display for Credentials {
     }
 }
 
-#[derive(Serialize, Deserialize)]
-struct AuthResponse {
+#[derive(Serialize, Deserialize,Debug)]
+struct AccessToken {
     access_token: String,
+    token_type: String,
+    expires_in: u32,
+    scope: String,
 }
 
 #[derive(Default, Debug)]
 pub struct Client {
-    /// JWT token containing expiration etc...
-    pub access_token: Option<String>,
+    pub session: Option<AccessToken>,
 }
 
 static CONTENT_TYPE: &str = "application/vnd.retailer.v10+json";
@@ -69,8 +62,8 @@ impl Client {
         }
 
         let content = &res.text().await?;
-        let data = serde_json::from_str::<AuthResponse>(content)?;
-        self.access_token = Some(data.access_token);
+        let data = serde_json::from_str::<AccessToken>(content)?;
+        self.session = Some(data);
 
         Ok(())
     }
@@ -83,8 +76,8 @@ impl Client {
     ) -> Result<reqwest::Response> {
         let client = reqwest::Client::new();
         let url = format!("https://api.bol.com/retailer{}", endpoint);
-        let access_token = match self.access_token {
-            Some(ref token) => token,
+        let access_token = match self.session {
+            Some(ref session) => &session.access_token,
             None => anyhow::bail!("Client is not authenticated."),
         };
 
@@ -93,8 +86,6 @@ impl Client {
             .header(header::ACCEPT, CONTENT_TYPE)
             .header(header::AUTHORIZATION, format!("Bearer {}", access_token))
             .header(header::CONTENT_TYPE, CONTENT_TYPE);
-
-        dbg!(&req);
 
         let res = match body {
             Some(data) => req.body(data),
