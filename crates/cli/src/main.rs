@@ -4,15 +4,13 @@ use scraping::{self, providers::Provider, status::Status};
 mod versioning;
 
 use anyhow::Result;
+use crossterm::{cursor, terminal, ExecutableCommand, QueueableCommand};
 use rust_xlsxwriter::Workbook;
 use std::{
-    io::{self, BufRead},
+    io::{self, BufRead, Write},
     path::PathBuf,
     str::FromStr,
-    sync::Arc,
 };
-use uploader::api::bol;
-use uploader::api::bol::Offer;
 
 use clap::Parser;
 
@@ -37,7 +35,15 @@ static OUTFILE: &str = "products.xlsx";
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
-    let state = Arc::new(Status::new());
+
+    let state = Status::new(|status| {
+        let mut stdout = io::stdout();
+        stdout.queue(cursor::MoveTo(0, 0)).expect("cursor to move");
+        stdout
+            .execute(terminal::Clear(terminal::ClearType::FromCursorDown))
+            .expect("to clear terminal");
+        write!(stdout, "{status}").expect("to write status into stdout");
+    });
 
     // let conf = config::initialize()?;
     // let client = bol::Client::new_with_session(&conf.bol).await?;

@@ -13,6 +13,7 @@ anyhow = "1.0.91"
 rfd = "0.15.0"
 rust_xlsxwriter = "0.79.0"
 tokio = { version = "1", features = ["full"] }
+crossterm = "0.28.1"
 
 reqwest = { version = "0.12.8", optional = true }
 bytes = { version = "1.8.0", optional = true }
