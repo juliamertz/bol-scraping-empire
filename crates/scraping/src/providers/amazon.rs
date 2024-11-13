@@ -5,7 +5,7 @@ const RESULTS_PER_PAGE: usize = 56;
 pub async fn query_products(
     url: &str,
     pages: usize,
-    state: status::GlobalStatus,
+    state: status::State,
 ) -> Result<Products> {
     let mut handles = Vec::with_capacity(pages);
 

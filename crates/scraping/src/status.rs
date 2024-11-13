@@ -27,6 +27,8 @@ pub struct QueryStatus {
     pub pending: AtomicU32,
     pub success: AtomicU32,
     pub errored: AtomicU32,
+
+    pub duplicates: AtomicU32,
 }
 
 impl Display for QueryStatus {
@@ -34,19 +36,25 @@ impl Display for QueryStatus {
         writeln!(f, "total: {}", self.total.load())?;
         writeln!(f, "pending: {}", self.pending.load())?;
         writeln!(f, "done: {}", self.success.load())?;
-        writeln!(f, "errored: {}", self.errored.load())
+        writeln!(f, "errored: {}", self.errored.load())?;
+
+        writeln!(f, "duplicates: {}", self.errored.load())
     }
 }
 
+pub type State = Arc<Status>;
 pub type OnUpdate = dyn Fn(&QueryStatus) + Send + Sync;
-pub type GlobalStatus = Arc<Status>;
+
 #[derive(Default)]
 pub struct Status {
     queries: QueryStatus,
     on_update: Option<Arc<OnUpdate>>,
 }
 
+
 impl Status {
+    /// Takes in a callback function that will be called on status change.
+    /// This function may be called across multiple threads
     pub fn new<F>(on_update: F) -> Arc<Self>
     where
         F: Fn(&QueryStatus) + Send + Sync + 'static,
@@ -63,21 +71,30 @@ impl Status {
         }
     }
 
+    /// Increment both total and pending count
     pub fn add_pending(&self) {
         self.queries.total.increment();
         self.queries.pending.increment();
         self.update();
     }
 
+    /// Decrement pending and add to success count
     pub fn pending_success(&self) {
         self.queries.pending.decrement();
         self.queries.success.increment();
         self.update();
     }
 
+    /// Decrement pending and add to error count
     pub fn pending_errored(&self) {
         self.queries.pending.decrement();
         self.queries.errored.increment();
+        self.update();
+    }
+
+    /// Increment duplicates count
+    pub fn add_duplicate(&self) {
+        self.queries.duplicates.increment();
         self.update();
     }
 }

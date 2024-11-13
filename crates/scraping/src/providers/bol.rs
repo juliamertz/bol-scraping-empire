@@ -26,7 +26,7 @@ async fn query_specifications(product: Product, state: &status::Status) -> Produ
 pub async fn query_products(
     url: &str,
     pages: usize,
-    state: status::GlobalStatus,
+    state: status::State,
 ) -> Result<Products> {
     let mut handles = Vec::with_capacity(pages);
 
@@ -39,7 +39,7 @@ pub async fn query_products(
             let url = paginate_url(&url, i + 1);
             let doc = fetch_dom(&url).await.expect("valid dom");
 
-            let products = parse_products(doc);
+            let products = parse_products(&state, doc);
             state.pending_success();
 
             let with_specifications = products
@@ -67,12 +67,12 @@ async fn query_product_page(url: &str) -> Result<Specifications> {
     parse_product_page(doc)
 }
 
-fn parse_products(doc: Html) -> Vec<Product> {
+fn parse_products(state: &status::State, doc: Html) -> Vec<Product> {
     let container = doc.select(&container_selector).next().expect("Pagina komt niet overeen met de verwachte structuur. Deze is nog niet toegevoegd, of bol.com heeft hun pagina aangepast");
 
     let mut buffer = Vec::with_capacity(RESULTS_PER_PAGE);
     for element in container.child_elements() {
-        if let Err(err) = parse_product_item(element, &mut buffer) {
+        if let Err(err) = parse_product_items(state, element, &mut buffer) {
             eprintln!("failed to parse product listing: {err:#}")
         }
     }
@@ -147,7 +147,11 @@ lazy_static! {
         Selector::parse(r#"del[data-test="from-price"]"#).unwrap();
 }
 
-fn parse_product_item(el: ElementRef<'_>, buffer: &mut Vec<Product>) -> Result<()> {
+fn parse_product_items(
+    state: &status::State,
+    el: ElementRef<'_>,
+    buffer: &mut Vec<Product>,
+) -> Result<()> {
     // TODO: SVG IMAGES
     let image = el.select(&image_selector).next().context("Image source")?;
     let image = image.attr("src").unwrap_or(
@@ -171,7 +175,8 @@ fn parse_product_item(el: ElementRef<'_>, buffer: &mut Vec<Product>) -> Result<(
 
     for item in buffer.iter() {
         if item.url == url {
-            anyhow::bail!("Product with same url alredy parsed")
+            state.add_duplicate();
+            anyhow::bail!("Product with same url already parsed")
         }
     }
 

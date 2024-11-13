@@ -32,7 +32,7 @@ impl Provider {
         &self,
         url: &str,
         pages: usize,
-        state: status::GlobalStatus,
+        state: status::State,
     ) -> Result<Products> {
         match self {
             Self::Amazon => amazon::query_products(url, pages, state).await,
