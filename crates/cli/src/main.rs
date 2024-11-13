@@ -35,7 +35,7 @@ static OUTFILE: &str = "products.xlsx";
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
-    let _conf = config::initialize()?;
+    let _conf = config::read()?;
 
     let state = Status::new(|status| {
         let mut stdout = io::stdout();

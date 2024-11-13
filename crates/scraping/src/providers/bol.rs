@@ -79,6 +79,7 @@ fn parse_products(doc: Html) -> Vec<Product> {
 
     buffer
 }
+
 lazy_static! {
     static ref specs_container_selector: Selector = Selector::parse("section[data-group-name='ProductSpecification'] .js_show-more-specifications .js_show-more-content").unwrap();
     static ref specs_section_selector: Selector = Selector::parse(".specs__list").unwrap();

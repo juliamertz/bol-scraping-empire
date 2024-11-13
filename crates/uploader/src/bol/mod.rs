@@ -52,6 +52,7 @@ impl Client {
             .post("https://login.bol.com/token?grant_type=client_credentials")
             // If we don't supply a content length header it will respond with 403
             .header(header::CONTENT_LENGTH, 0)
+            // credentials are formatted as base64 encoded string
             .header(header::AUTHORIZATION, format!("Basic {}", creds))
             .send()
             .await?;
@@ -86,8 +87,8 @@ impl Client {
         let req = client
             .request(method, url)
             .header(header::ACCEPT, CONTENT_TYPE)
-            .header(header::AUTHORIZATION, format!("Bearer {}", access_token))
-            .header(header::CONTENT_TYPE, CONTENT_TYPE);
+            .header(header::CONTENT_TYPE, CONTENT_TYPE)
+            .header(header::AUTHORIZATION, format!("Bearer {}", access_token));
 
         let res = match body {
             Some(data) => req.body(data),
@@ -122,9 +123,6 @@ impl Client {
 
         dbg!(&res);
         dbg!(&res.text().await?);
-        // if res.status() != StatusCode::ACCEPTED {
-        //     anyhow::bail!("Expected status 202 Accepted got {}", res.status())
-        // }
 
         Ok(())
     }

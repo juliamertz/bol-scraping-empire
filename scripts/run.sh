@@ -1,5 +1,9 @@
 #!/usr/bin/env sh
 
+# Wrapper script to handle automatic updates.
+# When status 169 is returned can assume a new release has been downloaded and unpack it.
+# The script assumes it's placed in the same directory as the rust binary for distribution.
+
 cd $(dirname $0)
 
 name=bol-scraper-empire
