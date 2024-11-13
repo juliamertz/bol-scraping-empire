@@ -50,6 +50,7 @@ impl Client {
     pub async fn authenticate(&mut self, creds: &Credentials) -> Result<()> {
         let res = reqwest::Client::new()
             .post("https://login.bol.com/token?grant_type=client_credentials")
+            // If we don't supply a content length header it will respond with 403
             .header(header::CONTENT_LENGTH, 0)
             .header(header::AUTHORIZATION, format!("Basic {}", creds))
             .send()
@@ -101,20 +102,23 @@ impl Client {
 
     pub async fn create_offer(&self, offer: &Offer) -> Result<()> {
         let data = Some(serde_json::to_vec(offer)?);
-        let res = self.request(Method::POST, "/offer", data).await?;
+        let res = self
+            .request(Method::POST, "/offer", data)
+            .await?
+            .error_for_status()?;
 
         dbg!(&res);
         dbg!(&res.text().await?);
-        // if res.status() != StatusCode::ACCEPTED {
-        //     anyhow::bail!("Expected status 202 Accepted got {}", res.status())
-        // }
 
         Ok(())
     }
 
     pub async fn create_product_content(&self, content: &Content) -> Result<()> {
         let data = Some(serde_json::to_vec(content)?);
-        let res = self.request(Method::POST, "/content/products", data).await?;
+        let res = self
+            .request(Method::POST, "/content/products", data)
+            .await?
+            .error_for_status()?;
 
         dbg!(&res);
         dbg!(&res.text().await?);
