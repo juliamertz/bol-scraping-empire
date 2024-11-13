@@ -86,6 +86,7 @@
               ++ (with pkgs; [
                 gh
                 dasel
+                cargo-udeps
               ])
               ++ (with pkgs.rust-bin; [
                 (stable.latest.minimal.override {

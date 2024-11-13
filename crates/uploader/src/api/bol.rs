@@ -1,9 +1,10 @@
-use std::fmt::{Display, Write};
+use super::types::*;
 
 use anyhow::Result;
 use base64::Engine;
 use reqwest::{header, Method, StatusCode};
 use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Credentials {
@@ -118,120 +119,17 @@ impl Client {
 
         Ok(())
     }
-}
 
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Offer {
-    ean: String,
-    condition: Condition,
-    reference: String,
-    on_hold_by_retailer: bool,
-    unknown_product_title: String,
-    pricing: Pricing,
-    stock: Stock,
-    fulfilment: Fulfilment,
-}
+    pub async fn create_product_content(&self, content: &Content) -> Result<()> {
+        let data = Some(serde_json::to_vec(content)?);
+        let res = self.request(Method::POST, "/content/products", data).await?;
 
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "UPPERCASE")]
-pub enum ConditionName {
-    New,
-    AsNew,
-    Good,
-    Reasonable,
-    Moderate,
-}
+        dbg!(&res);
+        dbg!(&res.text().await?);
+        // if res.status() != StatusCode::ACCEPTED {
+        //     anyhow::bail!("Expected status 202 Accepted got {}", res.status())
+        // }
 
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "UPPERCASE")]
-pub enum ConditionCategory {
-    New,
-    SecondHand,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Condition {
-    name: ConditionName,
-    category: ConditionCategory,
-    comment: Option<String>,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-struct Pricing {
-    bundle_prices: Vec<BundlePrice>,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-struct BundlePrice {
-    quantity: u32,
-    unit_price: f64,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-struct Stock {
-    amount: i32,
-    managed_by_retailer: bool,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "UPPERCASE")]
-enum FulfilmentMethod {
-    Fbr,
-    Fbb,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-struct Fulfilment {
-    method: FulfilmentMethod,
-    /// string, Enum: "24uurs-23" "24uurs-22" "24uurs-21" "24uurs-20" "24uurs-19" "24uurs-18" "24uurs-17" "24uurs-16" "24uurs-15" "24uurs-14" "24uurs-13" "24uurs-12" "1-2d" "2-3d" "3-5d" "4-8d" "1-8d" "MijnLeverbelofte" "VVB"
-    delivery_code: String,
-}
-
-impl Offer {
-    pub fn new(title: &str, ean: &str, price: f64, stock: i32, reference: Option<&str>) -> Self {
-        Self {
-            ean: ean.to_string(),
-            pricing: Pricing::new(price),
-            condition: Condition::default(),
-            reference: reference.unwrap_or_default().to_string(),
-            on_hold_by_retailer: false,
-            stock: Stock {
-                amount: stock,
-                managed_by_retailer: false,
-            },
-            unknown_product_title: title.to_string(),
-            fulfilment: Fulfilment {
-                method: FulfilmentMethod::Fbr,
-                // TODO:
-                delivery_code: "24uurs-23".into(),
-            },
-        }
-    }
-}
-
-impl Default for Condition {
-    fn default() -> Self {
-        Self {
-            name: ConditionName::New,
-            category: ConditionCategory::New,
-            comment: None,
-        }
-    }
-}
-
-impl Pricing {
-    fn new(unit_price: f64) -> Self {
-        Self {
-            bundle_prices: vec![BundlePrice {
-                quantity: 1,
-                unit_price,
-            }],
-        }
+        Ok(())
     }
 }

@@ -19,4 +19,4 @@ serde = { version = "1.0.214", features = ["derive"], optional = true }
 
 [features]
 default = ["updater"]
-updater = ["dep:bytes", "dep:serde", "dep:serde_json"]
+updater = ["dep:bytes", "dep:serde"]
