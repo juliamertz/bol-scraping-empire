@@ -1,5 +1,6 @@
-use super::types::*;
+pub mod types;
 
+use types::*;
 use anyhow::Result;
 use base64::Engine;
 use reqwest::{header, Method, StatusCode};
@@ -21,7 +22,7 @@ impl Display for Credentials {
 }
 
 #[derive(Serialize, Deserialize,Debug)]
-struct AccessToken {
+pub struct AccessToken {
     access_token: String,
     token_type: String,
     expires_in: u32,

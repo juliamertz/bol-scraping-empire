@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
-use uploader::api::bol;
+use uploader::bol;
 
 static CONFIG: OnceLock<Config> = OnceLock::new();
 
@@ -26,6 +26,6 @@ pub fn initialize() -> Result<&'static Config> {
     CONFIG.get().context("Config to be locked")
 }
 
-pub fn read() -> &'static Config {
-    CONFIG.get().expect("Config to be initialized")
-}
+// pub fn read() -> &'static Config {
+//     CONFIG.get().expect("Config to be initialized")
+// }
