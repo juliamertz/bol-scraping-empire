@@ -2,11 +2,7 @@ use super::*;
 
 const RESULTS_PER_PAGE: usize = 56;
 
-pub async fn query_products(
-    url: &str,
-    pages: usize,
-    state: status::State,
-) -> Result<Products> {
+pub async fn query_products(url: &str, pages: usize, state: status::State) -> Result<Products> {
     let mut handles = Vec::with_capacity(pages);
 
     for i in 0..pages {
@@ -18,7 +14,7 @@ pub async fn query_products(
             let url = paginate_url(&url, i);
             let doc = fetch_dom(&url).await.expect("valid dom");
             state.pending_success();
-            parse_products(doc)
+            parse_products(&state, doc)
         });
 
         handles.push(handle);
@@ -33,14 +29,14 @@ pub async fn query_products(
     Ok(Products(results))
 }
 
-fn parse_products(doc: Html) -> Vec<Product> {
+fn parse_products(state: &status::State, doc: Html) -> Vec<Product> {
     let container = doc.select(&container_selector).next().unwrap();
 
     let mut buffer = Vec::with_capacity(RESULTS_PER_PAGE);
     for element in container.child_elements() {
         match element.attr("data-component-type") {
             Some("s-search-result") => {
-                if parse_product(element, &mut buffer).is_err() {
+                if parse_product(state, element, &mut buffer).is_err() {
                     continue;
                 }
             }
@@ -63,7 +59,11 @@ lazy_static! {
     static ref price_old_selector: Selector = Selector::parse(".a-price.a-text-price").unwrap();
 }
 
-fn parse_product(el: ElementRef<'_>, buffer: &mut Vec<Product>) -> Result<()> {
+fn parse_product(
+    state: &status::State,
+    el: ElementRef<'_>,
+    buffer: &mut Vec<Product>,
+) -> Result<()> {
     let image = el
         .select(&image_selector)
         .next()
@@ -85,6 +85,13 @@ fn parse_product(el: ElementRef<'_>, buffer: &mut Vec<Product>) -> Result<()> {
     }
 
     let url = title_wrapper.attr("href").context("product to have url")?;
+
+    for item in buffer.iter() {
+        if item.url == url {
+            state.add_duplicate();
+            anyhow::bail!("Product with same url already parsed")
+        }
+    }
 
     let price = match el.select(&price_old_selector).next() {
         Some(price) => price
