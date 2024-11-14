@@ -68,7 +68,8 @@ async fn main() -> Result<()> {
     let mut outfile = PathBuf::from_str(OUTFILE).unwrap();
     if let Some(path) = cli.location {
         outfile = path;
-    } else if cli.ask_location {
+    } 
+    if cli.ask_location {
         outfile = rfd::FileDialog::new()
             .set_file_name(OUTFILE)
             .save_file()
