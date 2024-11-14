@@ -1,7 +1,7 @@
 //! this program is meant to be distributed to non-techical people
 //! Automated updating makes the most sense for this usecase
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use bytes::Bytes;
 use lazy_static::lazy_static;
 use reqwest::header::{ACCEPT, USER_AGENT};
@@ -93,8 +93,7 @@ async fn query_releases() -> Result<Vec<Release>> {
 
 async fn latest_release() -> Result<Release> {
     let releases = query_releases().await?;
-    let latest = releases.into_iter().next().expect("At least one release");
-
+    let latest = releases.into_iter().next().context("Expected atleast one release")?;
     Ok(latest)
 }
 
@@ -115,14 +114,14 @@ async fn fetch_latest_bin() -> Result<Bytes> {
         *REPO, filename
     );
 
-    let res = reqwest::get(url).await.unwrap();
+    let res = reqwest::get(url).await?;
 
-    Ok(res.bytes().await.unwrap())
+    Ok(res.bytes().await?)
 }
 
 pub async fn try_update() -> Result<bool> {
     let latest = &latest_release().await?;
-    let version = Version::parse(&latest.tag_name).unwrap();
+    let version = Version::parse(&latest.tag_name)?;
     let current = Version::parse(env!("CARGO_PKG_VERSION")).expect("valid runtime version");
 
     match version.cmp(&current) {
