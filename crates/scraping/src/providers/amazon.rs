@@ -128,7 +128,7 @@ fn parse_product(
         title,
         price,
         image: image.to_string(),
-        url: url.to_string(),
+        url: format!("https://amazon.nl{}", url),
         ean: None,
     };
 
