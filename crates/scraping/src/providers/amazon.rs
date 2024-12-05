@@ -11,7 +11,7 @@ pub async fn query_products(url: &str, pages: usize, state: status::State) -> Re
         let handle = tokio::spawn(async move {
             println!("querying page {}", i + 1);
             state.add_pending();
-            let url = paginate_url(&url, i);
+            let url = paginate_url(&url, i + 1);
             let doc = fetch_dom(&url).await.expect("valid dom");
             state.pending_success();
             parse_products(&state, doc)
