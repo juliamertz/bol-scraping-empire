@@ -5,10 +5,14 @@ pub use anyhow::{Context, Result};
 pub use lazy_static::lazy_static;
 pub use regex::Regex;
 pub use scraper::{selectable::Selectable, ElementRef, Html, Selector};
+use umya_spreadsheet::{Spreadsheet, Worksheet};
 
 use crate::status;
 use reqwest::StatusCode;
-use std::ops::{Deref, DerefMut};
+use std::{
+    ops::{Deref, DerefMut},
+    path::Path,
+};
 
 pub async fn fetch_dom(url: &str) -> Result<Html> {
     let res = reqwest::get(url).await?;
@@ -96,26 +100,37 @@ pub fn paginate_url(url: &str, page: usize) -> String {
 }
 
 impl Products {
-    pub fn as_worksheet(&self) -> Result<rust_xlsxwriter::Worksheet> {
-        let mut worksheet = rust_xlsxwriter::Worksheet::new();
+    pub fn from_spreadsheet(path: impl AsRef<Path>) -> Result<Self> {
+        // let mut sheet = umya_spreadsheet::new_file();
+        //
+        // rust_xlsxwriter::Workbook::rea
+        todo!()
+    }
+
+    pub fn as_spreadsheet(&self) -> Result<Spreadsheet> {
+        let mut book = umya_spreadsheet::new_file();
+        let sheet = book
+            .get_sheet_mut(&0)
+            .expect("workbook to have atleast one sheet");
 
         let column_names = ["title", "image", "url", "price", "ean"];
         for (col, name) in column_names.iter().enumerate() {
-            worksheet.write(0, col as u16, *name)?;
+            sheet.get_cell_mut((0, col as u32)).set_value(*name);
         }
 
         for (i, product) in self.0.iter().enumerate() {
             let row = (i + 1) as u32;
-            worksheet.write(row, 0, &product.title)?;
-            worksheet.write(row, 1, &product.image)?;
-            worksheet.write(row, 2, &product.url)?;
-            worksheet.write(row, 3, product.price)?;
+
+            sheet.get_cell_mut((row, 0)).set_value(&product.title);
+            sheet.get_cell_mut((row, 1)).set_value(&product.image);
+            sheet.get_cell_mut((row, 2)).set_value(&product.url);
+            sheet.get_cell_mut((row, 3)).set_value_number(product.price);
             if let Some(ean) = product.ean {
-                worksheet.write(row, 4, ean)?;
+                sheet.get_cell_mut((row, 4)).set_value_number(ean as f64);
             }
         }
 
-        Ok(worksheet)
+        Ok(book)
     }
 }
 

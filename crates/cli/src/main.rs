@@ -5,7 +5,6 @@ mod versioning;
 
 use anyhow::Result;
 use crossterm::{cursor, terminal, ExecutableCommand, QueueableCommand};
-use rust_xlsxwriter::Workbook;
 use std::{
     io::{self, BufRead, Write},
     path::PathBuf,
@@ -102,10 +101,8 @@ async fn handle_scrape_command(url: Option<String>, ask_location: bool) -> Resul
     let pages = read_line("Hoeveel paginas? (1)")?.parse().unwrap_or(1);
 
     let provider = Provider::from_url(&url)?;
-    let products = provider.query_products(&url, pages, state).await?;
-
-    let mut workbook = Workbook::new();
-    workbook.push_worksheet(products.as_worksheet()?);
+    // let products = provider.query_products(&url, pages, state).await?;
+    // let mut workbook = products.as_workbook()?;
 
     println!("Output excel sheet gereed...");
 
@@ -117,9 +114,8 @@ async fn handle_scrape_command(url: Option<String>, ask_location: bool) -> Resul
             .unwrap_or(outfile)
     }
 
-    workbook.save(outfile)?;
+    // workbook.save(outfile)?;
     println!("Done!");
 
     Ok(())
 }
-

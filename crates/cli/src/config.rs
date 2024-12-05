@@ -3,11 +3,12 @@ use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
 use uploader::bol;
 
-static FILENAME: &str = "secrets.toml";
+static FILENAME: &str = "config.toml";
 static CONFIG: OnceLock<Config> = OnceLock::new();
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
+    pub default_stock: u32,
     pub bol: bol::Credentials,
 }
 

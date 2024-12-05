@@ -1,7 +1,9 @@
 /target
 .direnv
-products.xlsx
 .DS_Store
+
 scraper.tar.gz
+*.xlsx
 dist
-secrets.toml
+
+config.toml
