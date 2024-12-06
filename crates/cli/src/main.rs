@@ -83,8 +83,7 @@ async fn handle_upload_command(mut sheet_path: Option<PathBuf>, ask_location: bo
             None => anyhow::bail!("Expected either a sheet path or --ask-location to be used"),
         },
         true => rfd::FileDialog::new()
-            .set_file_name(OUTFILE)
-            .save_file()
+            .pick_file()
             .unwrap()
     };
 
