@@ -12,6 +12,7 @@ use reqwest::StatusCode;
 use std::{
     ops::{Deref, DerefMut},
     path::Path,
+    vec,
 };
 
 pub async fn fetch_dom(url: &str) -> Result<Html> {
@@ -101,10 +102,38 @@ pub fn paginate_url(url: &str, page: usize) -> String {
 
 impl Products {
     pub fn from_spreadsheet(path: impl AsRef<Path>) -> Result<Self> {
-        // let mut sheet = umya_spreadsheet::new_file();
-        //
-        // rust_xlsxwriter::Workbook::rea
-        todo!()
+        let book = umya_spreadsheet::reader::xlsx::read(path.as_ref()).unwrap();
+        let sheet = book
+            .get_sheet_by_name("Sheet1")
+            .expect("Spreadsheet to have atleast one tab");
+
+        let mut buf = vec![];
+        let mut row = 2; // skip header
+
+        loop {
+            // Not 0-indexed!
+            let title = sheet.get_value((1, row));
+            let image = sheet.get_value((2, row));
+            let url = sheet.get_value((3, row));
+            let price = sheet.get_value((4, row)).parse::<f64>();
+            let ean = sheet.get_value((5, row)).parse::<u64>().ok();
+
+            if title.is_empty() || image.is_empty() || url.is_empty() || price.is_err() {
+                break;
+            }
+
+            buf.push(Product {
+                title,
+                image,
+                url,
+                price: price.expect("price to be valid"),
+                ean,
+            });
+
+            row += 1;
+        }
+
+        Ok(Products(buf))
     }
 
     pub fn as_spreadsheet(&self) -> Result<Spreadsheet> {
