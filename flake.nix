@@ -85,6 +85,7 @@
               buildInputs
               ++ (with pkgs; [
                 gh
+                onlyoffice-bin # for inspecting xlsx files
                 dasel
                 cargo-udeps
               ])
