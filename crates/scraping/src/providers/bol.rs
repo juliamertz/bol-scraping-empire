@@ -23,11 +23,7 @@ async fn query_specifications(product: Product, state: &status::Status) -> Produ
     }
 }
 
-pub async fn query_products(
-    url: &str,
-    pages: usize,
-    state: status::State,
-) -> Result<Products> {
+pub async fn query_products(url: &str, pages: usize, state: status::State) -> Result<Products> {
     let mut handles = Vec::with_capacity(pages);
 
     for i in 0..pages {
@@ -62,8 +58,8 @@ pub async fn query_products(
     Ok(results.into())
 }
 
-async fn query_product_page(url: &str) -> Result<Specifications> {
-    let doc = fetch_dom(url).await?;
+async fn query_product_page(url: &Url) -> Result<Specifications> {
+    let doc = fetch_dom(url.to_string().as_str()).await?;
     parse_product_page(doc)
 }
 
@@ -174,7 +170,7 @@ fn parse_product_items(
         .context("product to have url")?;
 
     for item in buffer.iter() {
-        if item.url == url {
+        if item.url.to_string() == url {
             state.add_duplicate();
             anyhow::bail!("Product with same url already parsed")
         }
@@ -199,8 +195,8 @@ fn parse_product_items(
     let product = Product {
         title,
         price,
-        image: image.to_string(),
-        url: format!("https://bol.com{}", url),
+        image: Url::parse(image)?,
+        url: Url::parse(&format!("https://bol.com{}", url))?,
         ean: None,
     };
 

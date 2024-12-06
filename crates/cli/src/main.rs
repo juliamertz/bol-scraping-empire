@@ -1,5 +1,9 @@
 mod config;
-use scraping::{self, providers::Provider, status::Status};
+use scraping::{
+    self,
+    providers::{Products, Provider},
+    status::Status,
+};
 #[cfg(feature = "updater")]
 mod versioning;
 
@@ -29,7 +33,13 @@ enum Commands {
         #[arg(long)]
         url: Option<String>,
     },
-    Upload,
+    Upload {
+        #[arg(long)]
+        ask_location: bool,
+
+        #[arg(long)]
+        sheet_file_path: Option<PathBuf>,
+    },
 }
 
 fn read_line(msg: &str) -> std::io::Result<String> {
@@ -54,31 +64,47 @@ async fn main() -> Result<()> {
 
     match cli.command {
         Commands::Scrape { url, ask_location } => handle_scrape_command(url, ask_location).await?,
-        Commands::Upload => handle_upload_command().await?,
+        Commands::Upload {
+            sheet_file_path: file_path,
+            ask_location,
+        } => handle_upload_command(file_path, ask_location).await?,
     };
 
     Ok(())
 }
 
-async fn handle_upload_command() -> Result<()> {
+async fn handle_upload_command(mut sheet_path: Option<PathBuf>, ask_location: bool) -> Result<()> {
     use uploader::bol::{types::Offer, Client};
-
     let conf = config::read()?;
-    let client = Client::new_with_session(&conf.bol).await?;
 
-    let offer = Offer::new(
-        "Comfort",
-        "9789059564169",
-        999.99,
-        10,
-        Some("REF12345"),
-    );
+    let sheet_path = match ask_location {
+        false => match sheet_path {
+            Some(path) => path,
+            None => anyhow::bail!("Expected either a sheet path or --ask-location to be used"),
+        },
+        true => rfd::FileDialog::new()
+            .set_file_name(OUTFILE)
+            .save_file()
+            .unwrap()
+    };
 
-    // let ser = serde_json::to_string_pretty(&offer)?;
-    // std::fs::write("./offer.json", ser)?;
-    client.create_offer(&offer).await?;
+    if !sheet_path.exists() {
+        anyhow::bail!("Bestand {sheet_path:?} kan niet worden gevonden.");
+    }
 
-    // client.get_orders().await?;
+    let products = Products::from_spreadsheet(sheet_path)?;
+    dbg!(products);
+
+    // let client = Client::new_with_session(&conf.bol).await?;
+
+    // let offer = Offer::new(
+    //     "Comfort",
+    //     "9789059564169",
+    //     999.99,
+    //     10,
+    //     Some("REF12345"),
+    // );
+    // client.create_offer(&offer).await?;
 
     Ok(())
 }

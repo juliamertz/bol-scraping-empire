@@ -5,7 +5,8 @@ pub use anyhow::{Context, Result};
 pub use lazy_static::lazy_static;
 pub use regex::Regex;
 pub use scraper::{selectable::Selectable, ElementRef, Html, Selector};
-use umya_spreadsheet::{Spreadsheet, Worksheet};
+use umya_spreadsheet::Spreadsheet;
+use url::Url;
 
 use crate::status;
 use reqwest::StatusCode;
@@ -73,8 +74,8 @@ impl Provider {
 #[derive(Debug)]
 pub struct Product {
     pub title: String,
-    pub image: String,
-    pub url: String,
+    pub image: Url,
+    pub url: Url,
     pub price: f64,
     pub ean: Option<u64>,
 }
@@ -112,22 +113,46 @@ impl Products {
 
         loop {
             // Not 0-indexed!
+            // TODO: build column indexes from parsed heading names??
             let title = sheet.get_value((1, row));
-            let image = sheet.get_value((2, row));
-            let url = sheet.get_value((3, row));
+            let image = Url::parse(&sheet.get_value((2, row)));
+            let url = Url::parse(&sheet.get_value((3, row)));
             let price = sheet.get_value((4, row)).parse::<f64>();
-            let ean = sheet.get_value((5, row)).parse::<u64>().ok();
+            let ean = sheet.get_value((5, row)).parse::<u64>();
 
-            if title.is_empty() || image.is_empty() || url.is_empty() || price.is_err() {
+            // TODO: check if the rest is also empty
+            // maybe lookahead to see if next 10 rows are also empty
+            if title.is_empty() {
                 break;
+            }
+
+            // TODO: cleanup
+            if let Err(err) = image {
+                eprintln!("Invalide link naar foto in rij {row}, error: {err:?}");
+                continue;
+            }
+
+            if let Err(err) = url {
+                eprintln!("Invalide link naar product in rij {row}, error: {err:?}");
+                continue;
+            }
+
+            if let Err(err) = url {
+                eprintln!("Invalide link naar product in rij {row}, error: {err:?}");
+                continue;
+            }
+
+            if let Err(err) = url {
+                eprintln!("Invalide prijs in rij {row}, error: {err:?}");
+                continue;
             }
 
             buf.push(Product {
                 title,
-                image,
-                url,
+                image: image.unwrap(),
+                url: url.unwrap(),
                 price: price.expect("price to be valid"),
-                ean,
+                ean: ean.ok(),
             });
 
             row += 1;
@@ -151,8 +176,12 @@ impl Products {
             let row = (i + 1) as u32;
 
             sheet.get_cell_mut((row, 0)).set_value(&product.title);
-            sheet.get_cell_mut((row, 1)).set_value(&product.image);
-            sheet.get_cell_mut((row, 2)).set_value(&product.url);
+            sheet
+                .get_cell_mut((row, 1))
+                .set_value(product.image.to_string());
+            sheet
+                .get_cell_mut((row, 2))
+                .set_value(product.url.to_string());
             sheet.get_cell_mut((row, 3)).set_value_number(product.price);
             if let Some(ean) = product.ean {
                 sheet.get_cell_mut((row, 4)).set_value_number(ean as f64);

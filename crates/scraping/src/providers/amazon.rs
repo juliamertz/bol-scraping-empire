@@ -87,7 +87,7 @@ fn parse_product(
     let url = title_wrapper.attr("href").context("product to have url")?;
 
     for item in buffer.iter() {
-        if item.url == url {
+        if item.url.to_string() == url {
             state.add_duplicate();
             anyhow::bail!("Product with same url already parsed")
         }
@@ -127,8 +127,8 @@ fn parse_product(
     let product = Product {
         title,
         price,
-        image: image.to_string(),
-        url: format!("https://amazon.nl{}", url),
+        image: Url::parse(image)?,
+        url: Url::parse(&format!("https://amazon.nl{}", url))?,
         ean: None,
     };
 
