@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
-use uploader::bol;
+use uploader::bol::{self, types::DeliveryCode};
 
 static FILENAME: &str = "config.toml";
 static CONFIG: OnceLock<Config> = OnceLock::new();
@@ -9,6 +9,7 @@ static CONFIG: OnceLock<Config> = OnceLock::new();
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
     pub default_stock: u32,
+    pub default_delivery_code: DeliveryCode,
     pub bol: bol::Credentials,
 }
 
@@ -28,7 +29,7 @@ pub fn read() -> Result<&'static Config> {
         ),
     };
 
-    let config = toml::from_str::<Config>(&data).context("unable to parse secrets")?;
+    let config = toml::from_str::<Config>(&data).context("Configuratie bestand heeft niet het juist format, vraag om hulp als je niet weet wat dit inhoud")?;
     CONFIG.set(config).expect("Config to be unlocked");
     CONFIG.get().context("Config to be locked")
 }

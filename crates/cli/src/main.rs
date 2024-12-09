@@ -82,9 +82,7 @@ async fn handle_upload_command(mut sheet_path: Option<PathBuf>, ask_location: bo
             Some(path) => path,
             None => anyhow::bail!("Expected either a sheet path or --ask-location to be used"),
         },
-        true => rfd::FileDialog::new()
-            .pick_file()
-            .unwrap()
+        true => rfd::FileDialog::new().pick_file().unwrap(),
     };
 
     if !sheet_path.exists() {
@@ -92,7 +90,37 @@ async fn handle_upload_command(mut sheet_path: Option<PathBuf>, ask_location: bo
     }
 
     let products = Products::from_spreadsheet(sheet_path)?;
-    dbg!(products);
+    let offers = products
+        .0
+        .into_iter()
+        .enumerate()
+        // HACK: for testing
+        .take(3)
+        // make sure products have ean code
+        .filter(|p| p.1.ean.is_some())
+        // HACK: for testing so no-one accidentally buys the product
+        .map(|(_, v)| {
+            let mut tmp = v;
+            tmp.price = 999.99;
+            tmp
+        })
+        .map(|p| {
+            Offer::new(
+                &p.title,
+                &p.ean.unwrap().to_string(),
+                p.price,
+                conf.default_stock as i32,
+                None,
+                conf.default_delivery_code,
+            )
+        })
+        .collect::<Vec<_>>();
+
+    if offers.is_empty() {
+        anyhow::bail!("Er zijn geen producten gevonden met alle vereiste data, exiting.")
+    }
+
+    dbg!(offers);
 
     // let client = Client::new_with_session(&conf.bol).await?;
 

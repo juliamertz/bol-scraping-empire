@@ -71,7 +71,7 @@ impl Provider {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Product {
     pub title: String,
     pub image: Url,
@@ -81,7 +81,7 @@ pub struct Product {
 }
 
 #[derive(Debug)]
-pub struct Products(Vec<Product>);
+pub struct Products(pub Vec<Product>);
 
 lazy_static! {
     static ref page_param_regex: Regex = Regex::new(r"page=\d*").unwrap();

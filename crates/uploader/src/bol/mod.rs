@@ -1,11 +1,11 @@
 pub mod types;
 
-use types::*;
 use anyhow::Result;
 use base64::Engine;
 use reqwest::{header, Method, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
+use types::*;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Credentials {
@@ -21,7 +21,7 @@ impl Display for Credentials {
     }
 }
 
-#[derive(Serialize, Deserialize,Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct AccessToken {
     access_token: String,
     token_type: String,
@@ -41,6 +41,9 @@ impl Client {
         Self::default()
     }
 
+    /// Create a new client with populated session credentials
+    /// Re-authenticating the client doesn't make sense for this usecase
+    /// so we just don't bother
     pub async fn new_with_session(creds: &Credentials) -> Result<Self> {
         let mut client = Self::new();
         client.authenticate(creds).await?;
@@ -101,17 +104,27 @@ impl Client {
         Ok(res)
     }
 
-    pub async fn create_offer(&self, offer: &Offer) -> Result<()> {
+    pub async fn create_offer(&self, offer: &Offer) -> Result<responses::CreateOffer> {
         let data = Some(serde_json::to_vec(offer)?);
         let res = self
             .request(Method::POST, "/offer", data)
             .await?
             .error_for_status()?;
 
-        dbg!(&res);
-        dbg!(&res.text().await?);
+        // catch case's where statuscode isn't an error but also isn't CREATED
+        if res.status() != StatusCode::CREATED {
+            anyhow::bail!(
+                "Creating offer {offer:?} returned statuscode {}, expected: {} ",
+                res.status(),
+                StatusCode::CREATED
+            )
+        }
 
-        Ok(())
+        let text = res.text().await?;
+        let deserialized: responses::CreateOffer = serde_json::from_str(&text)?;
+        dbg!(&deserialized);
+        
+        Ok(deserialized)
     }
 
     pub async fn create_product_content(&self, content: &Content) -> Result<()> {
