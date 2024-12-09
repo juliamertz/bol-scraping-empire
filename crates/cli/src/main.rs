@@ -154,8 +154,8 @@ async fn handle_scrape_command(url: Option<String>, ask_location: bool) -> Resul
     let pages = read_line("Hoeveel paginas? (1)")?.parse().unwrap_or(1);
 
     let provider = Provider::from_url(&url)?;
-    // let products = provider.query_products(&url, pages, state).await?;
-    // let mut workbook = products.as_workbook()?;
+    let products = provider.query_products(&url, pages, state).await?;
+    let spreadsheet = products.as_spreadsheet()?;
 
     println!("Output excel sheet gereed...");
 
@@ -167,7 +167,8 @@ async fn handle_scrape_command(url: Option<String>, ask_location: bool) -> Resul
             .unwrap_or(outfile)
     }
 
-    // workbook.save(outfile)?;
+    umya_spreadsheet::writer::xlsx::write(&spreadsheet, outfile)?;
+
     println!("Done!");
 
     Ok(())

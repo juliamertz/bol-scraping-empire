@@ -3,7 +3,8 @@
 .DS_Store
 
 scraper.tar.gz
-*.xlsx
 dist
 
 config.toml
+*.xlsx
+*.xlsxtmp
